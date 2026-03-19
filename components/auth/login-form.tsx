@@ -87,11 +87,11 @@ export function LoginForm() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} placeholder="admin@orgabuddy.app" onChange={(event) => setEmail(event.target.value)} />
+              <Input id="email" type="email" value={email} placeholder="hugo@orgabuddy.app" onChange={(event) => setEmail(event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} placeholder="DemoPass123!" onChange={(event) => setPassword(event.target.value)} />
+              <Input id="password" type="password" value={password} placeholder="orga" onChange={(event) => setPassword(event.target.value)} />
             </div>
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Enter dashboard"}

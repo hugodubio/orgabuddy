@@ -26,11 +26,11 @@ export function MemberList({ bandId, members, canManage }: MemberListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Required</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Action</TableHead>
+            <TableHead>Membro</TableHead>
+            <TableHead>Função</TableHead>
+            <TableHead>Essencial</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="text-right">Ação</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -57,16 +57,16 @@ export function MemberList({ bandId, members, canManage }: MemberListProps) {
                     <div className="flex items-center gap-3">
                       <Switch checked={member.isRequired} />
                       <Button variant="ghost" size="sm" type="submit">
-                        {member.isRequired ? "Make optional" : "Make required"}
+                        {member.isRequired ? "Tornar opcional" : "Tornar essencial"}
                       </Button>
                     </div>
                   </form>
                 ) : (
-                  <Badge variant={member.isRequired ? "default" : "secondary"}>{member.isRequired ? "Required" : "Optional"}</Badge>
+                  <Badge variant={member.isRequired ? "default" : "secondary"}>{member.isRequired ? "Essencial" : "Opcional"}</Badge>
                 )}
               </TableCell>
               <TableCell>
-                <Badge variant={member.isRequired ? "success" : "warning"}>{member.isRequired ? "Core" : "Flexible"}</Badge>
+                <Badge variant={member.isRequired ? "success" : "warning"}>{member.isRequired ? "Principal" : "Flexível"}</Badge>
               </TableCell>
               <TableCell className="text-right">
                 {canManage ? (
@@ -77,7 +77,7 @@ export function MemberList({ bandId, members, canManage }: MemberListProps) {
                     }}
                   >
                     <Button variant="ghost" size="sm" type="submit">
-                      Remove
+                      Remover
                     </Button>
                   </form>
                 ) : null}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { DEV_AUTH_COOKIE, DEV_AUTH_PASSWORD } from "@/lib/auth/config";
+import { DEV_AUTH_COOKIE } from "@/lib/auth/config";
 
 export async function POST(request: Request) {
   const payload = (await request.json().catch(() => null)) as { email?: string; password?: string } | null;

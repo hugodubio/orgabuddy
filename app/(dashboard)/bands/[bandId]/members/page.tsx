@@ -23,9 +23,9 @@ export default async function BandMembersPage({ params }: { params: Promise<{ ba
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Members"
-        title={`${band.name} roster`}
-        description="Assign instruments, mark who is essential, and keep the scheduling engine grounded in reality."
+        eyebrow="Membros"
+        title={`Roster de ${band.name}`}
+        description="Atribui instrumentos, marca quem é essencial e mantém o motor de sugestões realista."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
@@ -33,7 +33,7 @@ export default async function BandMembersPage({ params }: { params: Promise<{ ba
         {user.role === "ADMIN" ? (
           <Card>
             <CardHeader>
-              <CardTitle>Add member</CardTitle>
+              <CardTitle>Adicionar membro</CardTitle>
             </CardHeader>
             <CardContent>
               <form
@@ -49,7 +49,7 @@ export default async function BandMembersPage({ params }: { params: Promise<{ ba
                 className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label>Select user</Label>
+                  <Label>Selecionar utilizador</Label>
                   <select
                     name="userId"
                     className="flex h-10 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-foreground"
@@ -57,7 +57,7 @@ export default async function BandMembersPage({ params }: { params: Promise<{ ba
                     required
                   >
                     <option value="" disabled>
-                      Choose member
+                      Escolher membro
                     </option>
                     {availableUsers.map((availableUser) => (
                       <option key={availableUser.id} value={availableUser.id}>
@@ -67,15 +67,15 @@ export default async function BandMembersPage({ params }: { params: Promise<{ ba
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="roleName">Instrument / role</Label>
-                  <Input id="roleName" name="roleName" placeholder="Drums" />
+                  <Label htmlFor="roleName">Instrumento / função</Label>
+                  <Input id="roleName" name="roleName" placeholder="Bateria" />
                 </div>
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input type="checkbox" name="isRequired" defaultChecked />
-                  Required for scheduling
+                  Essencial para o agendamento
                 </label>
                 <Button type="submit" className="w-full">
-                  Add to band
+                  Adicionar à banda
                 </Button>
               </form>
             </CardContent>

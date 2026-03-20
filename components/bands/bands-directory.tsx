@@ -32,7 +32,7 @@ export function BandsDirectory({ bands }: { bands: DirectoryBand[] }) {
   return (
     <div className="space-y-4">
       <SearchInput
-        placeholder="Search bands..."
+        placeholder="Pesquisar bandas..."
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
@@ -44,8 +44,8 @@ export function BandsDirectory({ bands }: { bands: DirectoryBand[] }) {
         </div>
       ) : (
         <EmptyState
-          title="No bands match that search"
-          description="Try a different band name or clear the search to see the full roster."
+          title="Nenhuma banda encontrada"
+          description="Tenta outro nome ou limpa a pesquisa para ver todas as bandas."
         />
       )}
     </div>

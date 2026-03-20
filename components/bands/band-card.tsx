@@ -25,9 +25,9 @@ export function BandCard({ band }: BandCardProps) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="text-xl">{band.name}</CardTitle>
-            <p className="mt-2 text-sm text-muted-foreground">{band.description || "No band description yet."}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{band.description || "Sem descrição ainda."}</p>
           </div>
-          <Badge>{requiredCount} required</Badge>
+          <Badge>{requiredCount} essenciais</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
@@ -35,25 +35,25 @@ export function BandCard({ band }: BandCardProps) {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users2 className="h-4 w-4" />
-              Members
+              Membros
             </div>
             <p className="mt-3 text-2xl font-semibold">{band.members.length}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarClock className="h-4 w-4" />
-              Next rehearsal
+              Próximo ensaio
             </div>
             <p className="mt-3 text-sm font-medium text-foreground">
-              {nextRehearsal ? format(nextRehearsal.startAt, "EEE, MMM d 'at' HH:mm") : "Nothing confirmed"}
+              {nextRehearsal ? format(nextRehearsal.startAt, "EEE, MMM d 'às' HH:mm") : "Nenhum confirmado"}
             </p>
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Band workspace</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Espaço da banda</p>
           <Button asChild variant="outline">
             <Link href={`/bands/${band.id}`}>
-              Open band
+              Abrir
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>

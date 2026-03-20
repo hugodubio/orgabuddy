@@ -1,4 +1,4 @@
-import { startOfWeek } from "date-fns";
+import { addDays, startOfWeek } from "date-fns";
 import { BandAvailabilityHeatmap } from "@/components/availability/band-availability-heatmap";
 import { PageContainer } from "@/components/layout/page-container";
 import { SectionHeader } from "@/components/layout/section-header";
@@ -13,23 +13,23 @@ export default async function BandAvailabilityPage({ params }: { params: Promise
   if (!band) notFound();
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = addDays(weekStart, 7);
   const blocks = await prisma.availabilityBlock.findMany({
     where: {
       userId: {
         in: band.members.map((member) => member.userId),
       },
-      startAt: {
-        gte: weekStart,
-      },
+      startAt: { gte: weekStart },
+      endAt: { lte: weekEnd },
     },
   });
 
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Band Availability"
-        title={`${band.name} overlap`}
-        description="See where the roster lines up before you ask the engine to rank the best rehearsal windows."
+        eyebrow="Disponibilidade da Banda"
+        title={`Overlap de ${band.name}`}
+        description="Vê onde os horários coincidem antes de gerar os melhores slots de ensaio."
       />
       {band.members.length ? (
         <BandAvailabilityHeatmap
@@ -42,7 +42,7 @@ export default async function BandAvailabilityPage({ params }: { params: Promise
           blocks={blocks}
         />
       ) : (
-        <EmptyState title="No members yet" description="Add members first so the heatmap can show meaningful overlap." />
+        <EmptyState title="Sem membros ainda" description="Adiciona membros primeiro para o heatmap mostrar o overlap." />
       )}
     </PageContainer>
   );

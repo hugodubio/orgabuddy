@@ -23,27 +23,27 @@ export default async function BandDetailPage({ params }: { params: Promise<{ ban
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Band Overview"
+        eyebrow="Visão Geral"
         title={band.name}
-        description={band.description || "This band is ready for structured rehearsal planning."}
+        description={band.description || "Esta banda está pronta para planeamento de ensaios."}
         action={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <Link href={`/bands/${band.id}/members`}>
                 <UsersRound className="h-4 w-4" />
-                Manage members
+                Gerir membros
               </Link>
             </Button>
             <Button asChild variant="outline">
               <Link href={`/bands/${band.id}/availability`}>
                 <CalendarRange className="h-4 w-4" />
-                Band availability
+                Disponibilidade
               </Link>
             </Button>
             <Button asChild>
               <Link href={`/bands/${band.id}/suggestions`}>
                 <Sparkles className="h-4 w-4" />
-                Suggestions
+                Sugestões
               </Link>
             </Button>
           </div>
@@ -54,42 +54,42 @@ export default async function BandDetailPage({ params }: { params: Promise<{ ban
         membersCount={band.members.length}
         requiredCount={requiredCount}
         optionalCount={optionalCount}
-        nextRehearsal={band.rehearsals[0] ? format(band.rehearsals[0].startAt, "EEE, MMM d 'at' HH:mm") : undefined}
+        nextRehearsal={band.rehearsals[0] ? format(band.rehearsals[0].startAt, "EEE, MMM d 'às' HH:mm") : undefined}
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Quick actions</CardTitle>
+            <CardTitle>Ações rápidas</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             <Button asChild variant="outline" className="justify-start">
-              <Link href={`/bands/${band.id}/members`}>Manage members</Link>
+              <Link href={`/bands/${band.id}/members`}>Gerir membros</Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
-              <Link href={`/bands/${band.id}/availability`}>Open availability</Link>
+              <Link href={`/bands/${band.id}/availability`}>Ver disponibilidade</Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
-              <Link href={`/bands/${band.id}/suggestions`}>Generate suggestions</Link>
+              <Link href={`/bands/${band.id}/suggestions`}>Gerar sugestões</Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
-              <Link href={`/bands/${band.id}/rehearsals`}>View rehearsals</Link>
+              <Link href={`/bands/${band.id}/rehearsals`}>Ver ensaios</Link>
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Roster snapshot</CardTitle>
+            <CardTitle>Membros</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {band.members.map((member) => (
               <div key={member.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
                 <div>
                   <p className="font-medium">{member.user.name}</p>
-                  <p className="text-sm text-muted-foreground">{member.roleName || "No role label"}</p>
+                  <p className="text-sm text-muted-foreground">{member.roleName || "Sem instrumento"}</p>
                 </div>
-                <div className="text-sm text-muted-foreground">{member.isRequired ? "Required" : "Optional"}</div>
+                <div className="text-sm text-muted-foreground">{member.isRequired ? "Essencial" : "Opcional"}</div>
               </div>
             ))}
           </CardContent>

@@ -14,10 +14,10 @@ export function BandOverviewStats({
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <StatCard label="Members" value={membersCount} icon={Users2} hint="Active roster in this band" />
-      <StatCard label="Required" value={requiredCount} icon={CircleCheckBig} hint="Needed for a valid suggestion" />
-      <StatCard label="Optional" value={optionalCount} icon={CircleCheckBig} hint="Helpful but not mandatory" />
-      <StatCard label="Next rehearsal" value={nextRehearsal ?? "None"} icon={CalendarClock} hint="Next confirmed session" />
+      <StatCard label="Membros" value={membersCount} icon={Users2} hint="Roster ativo nesta banda" />
+      <StatCard label="Essenciais" value={requiredCount} icon={CircleCheckBig} hint="Necessários para uma sugestão válida" />
+      <StatCard label="Opcionais" value={optionalCount} icon={CircleCheckBig} hint="Úteis mas não obrigatórios" />
+      <StatCard label="Próximo ensaio" value={nextRehearsal ?? "Nenhum"} icon={CalendarClock} hint="Próxima sessão confirmada" />
     </div>
   );
 }

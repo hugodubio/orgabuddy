@@ -37,14 +37,14 @@ export default async function BandRehearsalsPage({ params }: { params: Promise<{
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Rehearsals"
-        title={`${band.name} calendar`}
-        description="Confirmed rehearsals live here separately from availability, so everyone sees the real schedule clearly."
+        eyebrow="Ensaios"
+        title={`Calendário de ${band.name}`}
+        description="Os ensaios confirmados ficam aqui separados da disponibilidade, para todos verem o horário real."
       />
       {user.role === "ADMIN" ? (
         <Card>
           <CardHeader>
-            <CardTitle>Create manual rehearsal</CardTitle>
+            <CardTitle>Criar ensaio manual</CardTitle>
           </CardHeader>
           <CardContent>
             <form
@@ -63,23 +63,23 @@ export default async function BandRehearsalsPage({ params }: { params: Promise<{
               className="grid gap-4 md:grid-cols-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">Data</Label>
                 <Input id="date" name="date" type="date" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="start">Start</Label>
+                <Label htmlFor="start">Início</Label>
                 <Input id="start" name="start" type="time" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end">End</Label>
+                <Label htmlFor="end">Fim</Label>
                 <Input id="end" name="end" type="time" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" name="notes" placeholder="Set goals for the session" />
+                <Label htmlFor="notes">Notas</Label>
+                <Input id="notes" name="notes" placeholder="Objetivos da sessão" />
               </div>
               <div className="md:col-span-4">
-                <Button type="submit">Create rehearsal</Button>
+                <Button type="submit">Criar ensaio</Button>
               </div>
             </form>
           </CardContent>
@@ -104,7 +104,7 @@ export default async function BandRehearsalsPage({ params }: { params: Promise<{
           </div>
         </>
       ) : (
-        <EmptyState title="No confirmed rehearsals" description="Confirm a suggestion to populate this band's calendar." />
+        <EmptyState title="Sem ensaios confirmados" description="Confirma uma sugestão para popular o calendário desta banda." />
       )}
     </PageContainer>
   );

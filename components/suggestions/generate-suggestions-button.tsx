@@ -9,7 +9,7 @@ export function GenerateSuggestionsButton({ label = "Generate top 5" }: { label?
   return (
     <Button type="submit" disabled={pending}>
       <Sparkles className="mr-2 h-4 w-4" />
-      {pending ? "Generating…" : label}
+      {pending ? "A gerar…" : label}
     </Button>
   );
 }

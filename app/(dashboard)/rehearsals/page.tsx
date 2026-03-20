@@ -37,9 +37,9 @@ export default async function RehearsalsPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Global Calendar"
-        title="All confirmed rehearsals"
-        description="This is the final schedule view across bands, color coded so conflicts and free windows stay obvious."
+        eyebrow="Calendário global"
+        title="Todos os ensaios confirmados"
+        description="Vista final de todos os ensaios confirmados, com cores por banda para identificar conflitos e janelas livres."
       />
       <RehearsalCalendar
         events={rehearsals.map((rehearsal, index) => ({

@@ -21,9 +21,9 @@ export default async function SuggestionsPage({ params }: { params: Promise<{ ba
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Suggestions"
-        title={`${band.name} ranked slots`}
-        description="These are the best valid windows based on current availability, member importance, and confirmed-rehearsal conflicts."
+        eyebrow="Sugestões"
+        title={`Slots para ${band.name}`}
+        description="Os melhores horários com base nas disponibilidades atuais, importância dos membros e conflitos com ensaios confirmados."
         action={
           user.role === "ADMIN" ? (
             <form
@@ -38,7 +38,7 @@ export default async function SuggestionsPage({ params }: { params: Promise<{ ba
                 });
               }}
             >
-              <GenerateSuggestionsButton />
+              <GenerateSuggestionsButton label="Gerar top 5" />
             </form>
           ) : null
         }
@@ -70,8 +70,8 @@ export default async function SuggestionsPage({ params }: { params: Promise<{ ba
         />
       ) : (
         <EmptyState
-          title="No valid suggestions yet"
-          description="Generate ranked slots after enough availability has been submitted and the required lineup is defined."
+          title="Nenhuma sugestão válida ainda"
+          description="Gera slots depois de suficientes disponibilidades estarem submetidas e o alinhamento definido."
           action={
             user.role === "ADMIN" ? (
               <form
@@ -86,7 +86,7 @@ export default async function SuggestionsPage({ params }: { params: Promise<{ ba
                   });
                 }}
               >
-                <GenerateSuggestionsButton label="Generate suggestions" />
+                <GenerateSuggestionsButton label="Gerar sugestões" />
               </form>
             ) : null
           }

@@ -36,9 +36,9 @@ export default async function SuggestionsIndexPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Suggestions"
-        title="Best slots across all bands"
-        description="Pending decisions grouped by score. Click a band to compare options and confirm."
+        eyebrow="Sugestões"
+        title="Melhores slots em todas as bandas"
+        description="Decisões pendentes ordenadas por pontuação. Clica numa banda para comparar e confirmar."
       />
       {suggestions.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
@@ -57,12 +57,12 @@ export default async function SuggestionsIndexPage() {
                       </p>
                       <Badge variant="secondary">
                         <Users2 className="mr-1 h-3 w-3" />
-                        {suggestion.availableMembersCount} free
+                        {suggestion.availableMembersCount} livres
                       </Badge>
                       {suggestion.requiredMembersAvailable ? (
-                        <Badge variant="success">Required covered</Badge>
+                        <Badge variant="success">Essenciais disponíveis</Badge>
                       ) : (
-                        <Badge variant="destructive">Missing core players</Badge>
+                        <Badge variant="destructive">Faltam membros essenciais</Badge>
                       )}
                     </div>
                   </div>
@@ -74,8 +74,8 @@ export default async function SuggestionsIndexPage() {
         </div>
       ) : (
         <EmptyState
-          title="No suggestions yet"
-          description="Open a band, make sure members have submitted availability, then hit Generate to rank the best slots."
+          title="Nenhuma sugestão ainda"
+          description="Abre uma banda, garante que os membros submeteram disponibilidade e clica em Gerar para ordenar os melhores slots."
         />
       )}
     </PageContainer>

@@ -37,11 +37,11 @@ export function SuggestionCard({ bandId, suggestion, selected, onSelect, canConf
         <div className="flex flex-wrap gap-2 text-sm">
           <Badge variant="secondary">
             <Users2 className="mr-1 h-3.5 w-3.5" />
-            {suggestion.availableMembersCount} free
+            {suggestion.availableMembersCount} livres
           </Badge>
           <Badge variant={suggestion.requiredMembersAvailable ? "success" : "destructive"}>
             <Clock3 className="mr-1 h-3.5 w-3.5" />
-            {suggestion.requiredMembersAvailable ? "Required covered" : "Missing core players"}
+            {suggestion.requiredMembersAvailable ? "Essenciais disponíveis" : "Faltam essenciais"}
           </Badge>
         </div>
         {canConfirm ? (

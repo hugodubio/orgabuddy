@@ -19,27 +19,27 @@ export default async function DashboardPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Overview"
-        title="Keep every band aligned"
-        description="Who hasn't submitted availability, which slots are strongest right now, and what's already locked in."
+        eyebrow="Visão geral"
+        title="Mantém todas as bandas alinhadas"
+        description="Quem ainda não submeteu disponibilidade, quais os melhores slots e o que já está confirmado."
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Bands" value={data.totalBands} icon={Music4} />
-        <StatCard label="Members" value={data.totalMembers} icon={UsersRound} />
-        <StatCard label="Rehearsals this week" value={data.confirmedThisWeek} icon={CalendarCheck2} />
+        <StatCard label="Bandas" value={data.totalBands} icon={Music4} />
+        <StatCard label="Membros" value={data.totalMembers} icon={UsersRound} />
+        <StatCard label="Ensaios esta semana" value={data.confirmedThisWeek} icon={CalendarCheck2} />
         <StatCard
-          label="Missing availability"
+          label="Sem disponibilidade"
           value={data.missingAvailability}
           icon={Sparkles}
-          hint={data.missingAvailability > 0 ? "Can't generate reliable suggestions until these are filled" : "Everyone's in — suggestions are reliable"}
+          hint={data.missingAvailability > 0 ? "Não é possível gerar sugestões fiáveis sem estas disponibilidades" : "Todos submeteram — as sugestões são fiáveis"}
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming rehearsals</CardTitle>
+            <CardTitle>Próximos ensaios</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {data.upcomingRehearsals.length ? (
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
                 <RehearsalCard key={rehearsal.id} rehearsal={rehearsal} canManage={user.role === "ADMIN"} />
               ))
             ) : (
-              <EmptyState title="No confirmed rehearsals yet" description="Generate suggestions from availability and confirm the best slot to start filling the calendar." />
+              <EmptyState title="Nenhum ensaio confirmado ainda" description="Gera sugestões a partir das disponibilidades e confirma o melhor slot." />
             )}
           </CardContent>
         </Card>
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Waiting for availability</CardTitle>
+              <CardTitle>À espera de disponibilidade</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {data.missingAvailabilityMembers.length ? (
@@ -66,14 +66,14 @@ export default async function DashboardPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">All members submitted this week. Suggestions are at full accuracy.</p>
+                <p className="text-sm text-muted-foreground">Todos submeteram esta semana. As sugestões têm precisão máxima.</p>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Best slots right now</CardTitle>
+              <CardTitle>Melhores slots agora</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {data.topSuggestions.length ? (
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
                   </Link>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No suggestions yet. Open a band page, make sure availability is in, and hit Generate.</p>
+                <p className="text-sm text-muted-foreground">Nenhuma sugestão ainda. Abre uma banda, garante que as disponibilidades estão submetidas e clica em Gerar.</p>
               )}
             </CardContent>
           </Card>

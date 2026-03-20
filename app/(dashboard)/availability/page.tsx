@@ -15,9 +15,9 @@ export default async function AvailabilityPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Availability"
-        title="Paint your week"
-        description="This is the scheduling heartbeat of the app. Mark real free time quickly so suggestions can do the heavy lifting."
+        eyebrow="Disponibilidade"
+        title="Pinta a tua semana"
+        description="O coração do agendamento. Marca os teus horários livres para que as sugestões funcionem bem."
       />
       <WeeklyAvailabilityGrid initialWeekStart={weekStart} initialBlocks={blocks} />
     </PageContainer>

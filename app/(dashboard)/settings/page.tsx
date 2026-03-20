@@ -12,19 +12,19 @@ export default async function SettingsPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Settings"
-        title="Your defaults"
-        description="Keep personal scheduling preferences simple so band planning can stay fast."
+        eyebrow="Definições"
+        title="As tuas preferências"
+        description="Mantém as preferências de agendamento simples para que o planeamento seja rápido."
       />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
+            <CardTitle>Perfil</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label>Nome</Label>
               <Input value={user.name} readOnly />
             </div>
             <div className="space-y-2">
@@ -36,16 +36,16 @@ export default async function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Scheduling defaults</CardTitle>
+            <CardTitle>Preferências de agendamento</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Timezone</Label>
+              <Label>Fuso horário</Label>
               <Input value={user.timezone} readOnly />
             </div>
             <div className="space-y-2">
-              <Label>Default rehearsal duration</Label>
-              <Input value={`${user.defaultDurationMin} minutes`} readOnly />
+              <Label>Duração padrão de ensaio</Label>
+              <Input value={`${user.defaultDurationMin} minutos`} readOnly />
             </div>
           </CardContent>
         </Card>

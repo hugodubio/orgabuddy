@@ -35,7 +35,7 @@ export function SuggestionDetailPanel({
   if (!suggestion) {
     return (
       <Card>
-        <CardContent className="p-8 text-sm text-muted-foreground">Select a suggestion to inspect each member and see why the slot ranked well.</CardContent>
+        <CardContent className="p-8 text-sm text-muted-foreground">Seleciona uma sugestão para ver os detalhes de cada membro e perceber porque este slot ficou bem classificado.</CardContent>
       </Card>
     );
   }
@@ -57,14 +57,14 @@ export function SuggestionDetailPanel({
       </CardHeader>
       <CardContent className="space-y-5 p-6">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="success">{suggestion.availableMembersCount} members free</Badge>
+          <Badge variant="success">{suggestion.availableMembersCount} membros livres</Badge>
           <Badge variant={suggestion.requiredMembersAvailable ? "default" : "destructive"}>
-            {suggestion.requiredMembersAvailable ? "All required covered" : "Required gap"}
+            {suggestion.requiredMembersAvailable ? "Todos os essenciais disponíveis" : "Faltam essenciais"}
           </Badge>
-          {metadata?.preferredMembersCount ? <Badge variant="secondary">{metadata.preferredMembersCount} preferred</Badge> : null}
+          {metadata?.preferredMembersCount ? <Badge variant="secondary">{metadata.preferredMembersCount} preferidos</Badge> : null}
         </div>
         <p className="text-sm text-muted-foreground">
-          {metadata?.summary || "This slot keeps the required lineup intact and avoids existing confirmed conflicts."}
+          {metadata?.summary || "Este slot mantém os membros essenciais disponíveis e evita conflitos com ensaios confirmados."}
         </p>
         <MemberAvailabilityMatrix members={metadata?.members ?? []} />
       </CardContent>

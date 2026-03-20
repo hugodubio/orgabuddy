@@ -16,11 +16,11 @@ export default function DashboardError({
 
   return (
     <div className="flex h-[60vh] flex-col items-center justify-center gap-4 text-center">
-      <p className="text-2xl font-semibold">Something went wrong</p>
+      <p className="text-2xl font-semibold">Algo correu mal</p>
       <p className="max-w-md text-sm text-muted-foreground">
-        {error.message || "An unexpected error occurred. Try refreshing or going back."}
+        {error.message || "Ocorreu um erro inesperado. Tenta atualizar a página ou voltar atrás."}
       </p>
-      <Button onClick={reset}>Try again</Button>
+      <Button onClick={reset}>Tentar novamente</Button>
     </div>
   );
 }

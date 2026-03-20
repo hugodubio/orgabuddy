@@ -17,12 +17,12 @@ export function MemberAvailabilityMatrix({ members }: { members: MatrixMember[] 
           <div>
             <div className="flex items-center gap-2">
               <p className="font-medium">{member.name}</p>
-              {member.isRequired ? <Badge variant="default">Required</Badge> : <Badge variant="secondary">Optional</Badge>}
+              {member.isRequired ? <Badge variant="default">Essencial</Badge> : <Badge variant="secondary">Opcional</Badge>}
             </div>
-            <p className="text-xs text-muted-foreground">{member.roleName || "No instrument label"}</p>
+            <p className="text-xs text-muted-foreground">{member.roleName || "Sem instrumento"}</p>
           </div>
           <Badge variant={member.isAvailable ? "success" : "destructive"}>
-            {member.isAvailable ? "Available" : member.blockedByConflict ? "Conflict" : "Unavailable"}
+            {member.isAvailable ? "Disponível" : member.blockedByConflict ? "Conflito" : "Indisponível"}
           </Badge>
         </div>
       ))}

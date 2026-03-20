@@ -21,9 +21,9 @@ export default async function BandsPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Bands"
-        title="Manage your rehearsal spaces"
-        description="Create bands, inspect membership, and jump into scheduling without losing the bigger picture."
+        eyebrow="Bandas"
+        title="Gere os teus espaços de ensaio"
+        description="Cria bandas, gere membros e inicia o agendamento sem perder a visão global."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
@@ -31,29 +31,29 @@ export default async function BandsPage() {
           <BandsDirectory bands={bands} />
         ) : (
           <EmptyState
-            title="No bands yet"
-            description="Create your first band to start collecting member availability and generating rehearsal suggestions."
+            title="Nenhuma banda ainda"
+            description="Cria a tua primeira banda para começar a recolher disponibilidades e gerar sugestões de ensaios."
           />
         )}
 
         {user.role === "ADMIN" ? (
           <Card>
             <CardHeader>
-              <CardTitle>Create band</CardTitle>
+              <CardTitle>Criar banda</CardTitle>
             </CardHeader>
             <CardContent>
               <form action={createBand} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Band name</Label>
+                  <Label htmlFor="name">Nome da banda</Label>
                   <Input id="name" name="name" placeholder="Night Owls" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" name="description" placeholder="Short context for this band's rehearsal planning..." />
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea id="description" name="description" placeholder="Contexto breve para o planeamento de ensaios desta banda..." />
                 </div>
                 <Button type="submit" className="w-full">
                   <Plus className="h-4 w-4" />
-                  Create band
+                  Criar banda
                 </Button>
               </form>
             </CardContent>

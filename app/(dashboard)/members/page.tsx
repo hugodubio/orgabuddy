@@ -24,9 +24,9 @@ export default async function MembersPage() {
   return (
     <PageContainer>
       <SectionHeader
-        eyebrow="Members"
-        title="People across all bands"
-        description="A lightweight global roster view so you can see who is spread across multiple projects."
+        eyebrow="Membros"
+        title="Pessoas em todas as bandas"
+        description="Vista geral de todos os membros e as bandas a que pertencem."
       />
       <div className="grid gap-4 xl:grid-cols-2">
         {members.map((member) => (
@@ -43,7 +43,7 @@ export default async function MembersPage() {
                         {membership.band.name}
                       </span>
                     ))
-                  : "No band memberships"}
+                  : "Sem bandas"}
               </div>
             </CardContent>
           </Card>

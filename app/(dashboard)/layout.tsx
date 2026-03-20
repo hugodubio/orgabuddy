@@ -20,7 +20,7 @@ export default async function DashboardLayout({
       <div className="mx-auto flex min-h-screen max-w-[1700px]">
         <AppSidebar user={user} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <AppHeader user={user} />
+          <AppHeader user={{ name: user.name, email: user.email, role: user.role }} />
           <main className="flex-1 px-4 pb-8 pt-4 md:px-6 lg:px-8">{children}</main>
         </div>
       </div>

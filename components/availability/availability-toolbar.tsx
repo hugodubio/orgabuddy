@@ -20,22 +20,22 @@ export function AvailabilityToolbar({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button variant={mode === "AVAILABLE" ? "default" : "outline"} size="sm" onClick={() => onModeChange("AVAILABLE")}>
-        Paint available
+        Disponível
       </Button>
       <Button variant={mode === "PREFERRED" ? "default" : "outline"} size="sm" onClick={() => onModeChange("PREFERRED")}>
-        Paint preferred
+        Preferido
       </Button>
       <Button variant="outline" size="sm" onClick={onWeekdayEvenings}>
-        Weekday evenings
+        Noites de semana
       </Button>
       <Button variant="outline" size="sm" onClick={onWeekends}>
-        Weekends
+        Fins de semana
       </Button>
       <Button variant="outline" size="sm" onClick={onCopyPrevious}>
-        Copy previous week
+        Copiar semana anterior
       </Button>
       <Button variant="ghost" size="sm" onClick={onClear}>
-        Clear week
+        Limpar semana
       </Button>
     </div>
   );

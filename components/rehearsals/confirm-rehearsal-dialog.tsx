@@ -23,14 +23,14 @@ export function ConfirmRehearsalDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm">Confirm rehearsal</Button>
+        <Button size="sm">Confirmar ensaio</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Confirm rehearsal</DialogTitle>
+          <DialogTitle>Confirmar ensaio</DialogTitle>
           <DialogDescription>
-            Lock this suggestion into the final rehearsal calendar for {format(startAt, "EEEE, MMM d")} from{" "}
-            {format(startAt, "HH:mm")} to {format(endAt, "HH:mm")}.
+            Confirmar este slot no calendário de ensaios para {format(startAt, "EEEE, MMM d")} das{" "}
+            {format(startAt, "HH:mm")} às {format(endAt, "HH:mm")}.
           </DialogDescription>
         </DialogHeader>
         <div className="mt-6 flex justify-end gap-2">
@@ -39,15 +39,15 @@ export function ConfirmRehearsalDialog({
               startTransition(async () => {
                 try {
                   await confirmRehearsal({ bandId, suggestionId, startAt, endAt });
-                  toast.success("Rehearsal confirmed.");
+                  toast.success("Ensaio confirmado.");
                 } catch (error) {
-                  toast.error(error instanceof Error ? error.message : "Unable to confirm rehearsal.");
+                  toast.error(error instanceof Error ? error.message : "Não foi possível confirmar o ensaio.");
                 }
               })
             }
             disabled={isPending}
           >
-            {isPending ? "Confirming..." : "Confirm"}
+            {isPending ? "A confirmar..." : "Confirmar"}
           </Button>
         </div>
       </DialogContent>

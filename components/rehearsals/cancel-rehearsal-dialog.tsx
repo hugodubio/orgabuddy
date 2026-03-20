@@ -13,13 +13,13 @@ export function CancelRehearsalDialog({ rehearsalId }: { rehearsalId: string }) 
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          Cancel
+          Cancelar
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel rehearsal</DialogTitle>
-          <DialogDescription>This keeps the record but removes it from active confirmed scheduling.</DialogDescription>
+          <DialogTitle>Cancelar ensaio</DialogTitle>
+          <DialogDescription>Isto mantém o registo mas remove-o do agendamento ativo.</DialogDescription>
         </DialogHeader>
         <div className="mt-6 flex justify-end">
           <Button
@@ -28,15 +28,15 @@ export function CancelRehearsalDialog({ rehearsalId }: { rehearsalId: string }) 
               startTransition(async () => {
                 try {
                   await cancelRehearsal({ rehearsalId });
-                  toast.success("Rehearsal cancelled.");
+                  toast.success("Ensaio cancelado.");
                 } catch (error) {
-                  toast.error(error instanceof Error ? error.message : "Unable to cancel rehearsal.");
+                  toast.error(error instanceof Error ? error.message : "Não foi possível cancelar o ensaio.");
                 }
               })
             }
             disabled={isPending}
           >
-            {isPending ? "Cancelling..." : "Cancel rehearsal"}
+            {isPending ? "A cancelar..." : "Cancelar ensaio"}
           </Button>
         </div>
       </DialogContent>

@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/bands", label: "Bands", icon: Music4 },
-  { href: "/availability", label: "Availability", icon: CalendarRange },
-  { href: "/suggestions", label: "Suggestions", icon: Sparkles },
-  { href: "/rehearsals", label: "Rehearsals", icon: CalendarCheck2 },
-  { href: "/members", label: "Members", icon: UsersRound },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/bands", label: "Bandas", icon: Music4 },
+  { href: "/availability", label: "Disponibilidade", icon: CalendarRange },
+  { href: "/suggestions", label: "Sugestões", icon: Sparkles },
+  { href: "/rehearsals", label: "Ensaios", icon: CalendarCheck2 },
+  { href: "/members", label: "Membros", icon: UsersRound },
+  { href: "/settings", label: "Definições", icon: Settings },
 ];
 
 export function AppSidebar({
@@ -31,8 +31,8 @@ export function AppSidebar({
     <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-r border-white/10 bg-black/20 px-5 py-6 backdrop-blur-xl lg:flex">
       <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-primary/20 via-white/[0.02] to-accent/10 p-5">
         <p className="text-xs uppercase tracking-[0.28em] text-primary/70">OrgaBuddy</p>
-        <h2 className="mt-3 text-2xl font-semibold">Rehearsal control room</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Find overlap fast, lock rehearsals quickly, keep every band moving.</p>
+        <h2 className="mt-3 text-2xl font-semibold">Central de ensaios</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Cruza agendas, confirma ensaios, mantém todas as bandas a avançar.</p>
       </div>
 
       <nav className="mt-8 space-y-2">

@@ -41,11 +41,11 @@ export function LoginForm() {
           throw new Error(payload?.error || "Unable to sign in.");
         }
       }
-      toast.success("Signed in.");
+      toast.success("Sessão iniciada.");
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to sign in.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível entrar.");
     } finally {
       setLoading(false);
     }
@@ -61,25 +61,25 @@ export function LoginForm() {
       <div className="hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-primary/20 via-white/[0.03] to-accent/10 p-10 lg:flex lg:flex-col lg:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-primary/70">OrgaBuddy</p>
-          <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight">Smart rehearsal planning for multi-band chaos.</h1>
+          <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight">Agendamento inteligente para bandas sem stress.</h1>
           <p className="mt-5 max-w-lg text-base text-muted-foreground">
-            Collect availability once, rank the best overlap instantly, and confirm the rehearsal without another message thread.
+            Recolhe disponibilidades uma vez, encontra o melhor overlap e confirma o ensaio sem mais mensagens.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
-          {["Bands", "Overlap", "Calendar"].map((item) => (
+          {["Bandas", "Overlap", "Calendário"].map((item) => (
             <div key={item} className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-muted-foreground">
               <p className="text-lg font-semibold text-foreground">{item}</p>
-              <p className="mt-2">Built for practical scheduling, not admin busywork.</p>
+              <p className="mt-2">Feito para marcar ensaios, não para burocracia.</p>
             </div>
           ))}
         </div>
       </div>
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
+          <CardTitle>Entrar</CardTitle>
           <CardDescription>
-            {useSupabase ? "Enter your credentials to access the dashboard." : "Test mode — pick an account to enter directly."}
+            {useSupabase ? "Introduz as tuas credenciais para aceder ao dashboard." : "Modo de teste — escolhe uma conta para entrar diretamente."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -93,7 +93,7 @@ export function LoginForm() {
                   disabled={loading}
                   onClick={() => signIn(account.email, "")}
                 >
-                  {loading ? "Entering..." : `Enter as ${account.label}`}
+                  {loading ? "A entrar..." : `Entrar como ${account.label}`}
                 </Button>
               ))}
             </div>
@@ -104,11 +104,11 @@ export function LoginForm() {
                 <Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Palavra-passe</Label>
                 <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
               </div>
               <Button className="w-full" type="submit" disabled={loading}>
-                {loading ? "Signing in..." : "Enter dashboard"}
+                {loading ? "A entrar..." : "Entrar no dashboard"}
               </Button>
             </form>
           )}

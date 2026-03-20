@@ -76,7 +76,7 @@ export function WeeklyAvailabilityGrid({
       } catch {
         if (mounted) {
           setGrid(buildGridFromBlocks(weekStart, []));
-          toast.error("Couldn't load availability for this week. Try refreshing.");
+          toast.error("Não foi possível carregar a disponibilidade. Tenta atualizar.");
         }
       }
     });
@@ -149,9 +149,9 @@ export function WeeklyAvailabilityGrid({
           weekStart,
           blocks: buildBlocks(),
         });
-        toast.success("Availability saved.");
+        toast.success("Disponibilidade guardada.");
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not save availability.");
+        toast.error(error instanceof Error ? error.message : "Não foi possível guardar a disponibilidade.");
       }
     });
   }
@@ -161,8 +161,8 @@ export function WeeklyAvailabilityGrid({
       <CardHeader className="border-b border-white/10">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <CardTitle>Weekly availability</CardTitle>
-            <p className="mt-2 text-sm text-muted-foreground">Paint your real free windows directly into the grid. No event forms, just fast overlap input.</p>
+            <CardTitle>Disponibilidade semanal</CardTitle>
+            <p className="mt-2 text-sm text-muted-foreground">Pinta os teus horários livres diretamente na grelha. Sem formulários, só disponibilidade rápida.</p>
           </div>
           <WeekNavigator
             weekStart={weekStart}
@@ -192,9 +192,9 @@ export function WeeklyAvailabilityGrid({
               try {
                 const previousBlocks = await getAvailabilityForWeek(addWeeks(weekStart, -1));
                 setGrid(buildGridFromBlocks(weekStart, previousBlocks));
-                toast.success("Copied previous week.");
+                toast.success("Semana anterior copiada.");
               } catch {
-                toast.error("Couldn't load the previous week.");
+                toast.error("Não foi possível carregar a semana anterior.");
               }
             })
           }
@@ -248,7 +248,7 @@ export function WeeklyAvailabilityGrid({
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={isPending}>
-            {isPending ? "Saving..." : "Save availability"}
+            {isPending ? "A guardar..." : "Guardar disponibilidade"}
           </Button>
         </div>
       </CardContent>

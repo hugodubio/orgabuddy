@@ -11,42 +11,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const TEST_ACCOUNTS = [
+  { email: "hugo@orgabuddy.app", label: "Hugo (admin)" },
+  { email: "ras@orgabuddy.app", label: "Ras (member)" },
+];
+
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const useSupabase = hasSupabaseEnv();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function signIn(emailToUse: string, passwordToUse: string) {
     setLoading(true);
-
     try {
-      if (hasSupabaseEnv()) {
+      if (useSupabase) {
         const supabase = createSupabaseBrowserClient();
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          throw error;
-        }
+        const { error } = await supabase.auth.signInWithPassword({ email: emailToUse, password: passwordToUse });
+        if (error) throw error;
       } else {
         const response = await fetch("/api/dev-login", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailToUse }),
         });
-
         if (!response.ok) {
           const payload = (await response.json().catch(() => null)) as { error?: string } | null;
           throw new Error(payload?.error || "Unable to sign in.");
         }
       }
-
       toast.success("Signed in.");
       router.push("/dashboard");
       router.refresh();
@@ -55,6 +49,11 @@ export function LoginForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await signIn(email, password);
   }
 
   return (
@@ -80,23 +79,39 @@ export function LoginForm() {
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
           <CardDescription>
-            {hasSupabaseEnv() ? "Use the seeded demo credentials or your own Supabase Auth account." : "Local dev auth is active. Use the seeded demo credentials."}
+            {useSupabase ? "Enter your credentials to access the dashboard." : "Test mode — pick an account to enter directly."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} placeholder="hugo@orgabuddy.app" onChange={(event) => setEmail(event.target.value)} />
+        <CardContent className="space-y-4">
+          {!useSupabase ? (
+            <div className="space-y-3">
+              {TEST_ACCOUNTS.map((account) => (
+                <Button
+                  key={account.email}
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={loading}
+                  onClick={() => signIn(account.email, "")}
+                >
+                  {loading ? "Entering..." : `Enter as ${account.label}`}
+                </Button>
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} placeholder="orga" onChange={(event) => setPassword(event.target.value)} />
-            </div>
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? "Signing in..." : "Enter dashboard"}
-            </Button>
-          </form>
+          ) : (
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+              </div>
+              <Button className="w-full" type="submit" disabled={loading}>
+                {loading ? "Signing in..." : "Enter dashboard"}
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

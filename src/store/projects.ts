@@ -5,8 +5,9 @@ import type { ProjectDef } from '../types'
 interface ProjectsState {
   projects: ProjectDef[]
   fetchProjects: () => Promise<void>
-  addProject: (label: string) => Promise<void>
+  addProject: (label: string, parentId?: string) => Promise<void>
   deleteProject: (id: string) => Promise<void>
+  updateProjectNote: (id: string, note: string) => Promise<void>
 }
 
 const PALETTES = [
@@ -27,12 +28,12 @@ export const useProjectsStore = create<ProjectsState>((set) => ({
     set({ projects: (data ?? []) as ProjectDef[] })
   },
 
-  addProject: async (label: string) => {
+  addProject: async (label: string, parentId?: string) => {
     const id = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_')
     const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)]
     const { data } = await supabase
       .from('projects')
-      .insert({ id, label, ...palette })
+      .insert({ id, label, ...palette, parent_id: parentId ?? null })
       .select()
       .single()
     if (data) set((s) => ({ projects: [...s.projects, data as ProjectDef] }))
@@ -41,5 +42,12 @@ export const useProjectsStore = create<ProjectsState>((set) => ({
   deleteProject: async (id: string) => {
     await supabase.from('projects').delete().eq('id', id)
     set((s) => ({ projects: s.projects.filter((p) => p.id !== id) }))
+  },
+
+  updateProjectNote: async (id: string, note: string) => {
+    await supabase.from('projects').update({ note }).eq('id', id)
+    set((s) => ({
+      projects: s.projects.map((p) => (p.id === id ? { ...p, note } : p)),
+    }))
   },
 }))

@@ -1,21 +1,91 @@
 import { useState } from 'react'
-import type { ClassifyResult, Priority } from '../types'
+import type { ClassifyResult, Priority, TaskType } from '../types'
 import { useProjectsStore } from '../store/projects'
 
-function extractShortcuts(text: string, projectIds: string[]) {
-  const PRIORITIES: Record<string, Priority> = {
-    alta: 'alta', urgente: 'alta',
-    media: 'média', média: 'média',
-    baixa: 'baixa',
+const ALTA_WORDS = [
+  'urgente', 'urgente!', 'hoje', 'agora', 'deadline', 'asap', 'fix', 'bug',
+  'erro', 'crítico', 'critico', 'reunião', 'reuniao', 'meeting', 'amanhã',
+  'amanha', 'breaking', 'bloqueado', 'bloqueante', 'importante',
+]
+
+const BAIXA_WORDS = [
+  'ideia', 'talvez', 'futuro', 'explorar', 'investigar', 'pesquisar',
+  'quando houver tempo', 'um dia', 'someday', 'pensar', 'considerar',
+  'experimentar', 'tentar', 'ver se', 'e se', 'seria fixe', 'seria giro',
+]
+
+const IDEIA_WORDS = [
+  'ideia', 'talvez', 'e se', 'seria fixe', 'seria giro', 'explorar',
+  'considerar', 'pensar em', 'e se', 'podíamos', 'podiamos', 'e se fizesse',
+]
+
+function classifyLocally(
+  text: string,
+  projects: { id: string; label: string }[],
+  overrideProjects: string[],
+  overridePriority?: Priority
+): ClassifyResult {
+  const lower = text.toLowerCase()
+
+  // Priority
+  let priority: Priority = 'média'
+  let reason = 'Prioridade normal'
+
+  if (overridePriority) {
+    priority = overridePriority
+    reason = 'Prioridade definida manualmente'
+  } else if (ALTA_WORDS.some((w) => lower.includes(w))) {
+    priority = 'alta'
+    reason = 'Contém palavras de urgência'
+  } else if (BAIXA_WORDS.some((w) => lower.includes(w))) {
+    priority = 'baixa'
+    reason = 'Sem urgência imediata'
   }
+
+  // Type
+  const type: TaskType = IDEIA_WORDS.some((w) => lower.includes(w)) ? 'ideia' : 'tarefa'
+
+  // Auto-detect project from keywords if no override
+  let detectedProjects = overrideProjects
+  if (detectedProjects.length === 0) {
+    for (const p of projects) {
+      if (lower.includes(p.label.toLowerCase()) || lower.includes(p.id.toLowerCase())) {
+        detectedProjects = [p.id]
+        break
+      }
+    }
+  }
+
+  // Clean text: capitalize first letter
+  const cleaned = text.charAt(0).toUpperCase() + text.slice(1)
+
+  return {
+    text: cleaned,
+    projects: detectedProjects,
+    priority,
+    reason,
+    type,
+    tags: [],
+  }
+}
+
+const PRIORITY_SHORTCUTS: Record<string, Priority> = {
+  alta: 'alta', urgente: 'alta',
+  media: 'média', média: 'média',
+  baixa: 'baixa',
+}
+
+function extractShortcuts(text: string, projectIds: string[]) {
   let cleaned = text
   let priority: Priority | undefined
   const projects: string[] = []
+  const tags: string[] = []
 
   cleaned = cleaned.replace(/#(\w+)/g, (_, w) => {
-    const p = PRIORITIES[w.toLowerCase()]
+    const p = PRIORITY_SHORTCUTS[w.toLowerCase()]
     if (p) { priority = p; return '' }
-    return `#${w}`
+    tags.push(w.toLowerCase())
+    return ''
   })
   cleaned = cleaned.replace(/@(\w+)/g, (_, w) => {
     const id = projectIds.find((pid) => pid === w.toLowerCase())
@@ -23,7 +93,7 @@ function extractShortcuts(text: string, projectIds: string[]) {
     return `@${w}`
   })
 
-  return { cleaned: cleaned.trim(), priority, projects }
+  return { cleaned: cleaned.trim(), priority, projects, tags }
 }
 
 export function useClassify() {
@@ -32,28 +102,13 @@ export function useClassify() {
 
   const classify = async (text: string): Promise<ClassifyResult | null> => {
     const projectIds = projects.map((p) => p.id)
-    const { cleaned, priority, projects: overrideProjects } = extractShortcuts(text, projectIds)
+    const { cleaned, priority, projects: overrideProjects, tags } = extractShortcuts(text, projectIds)
 
     setLoading(true)
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/classify`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ text: cleaned || text, projects }),
-        }
-      )
-      if (!res.ok) return null
-      const result: ClassifyResult = await res.json()
-      if (priority) result.priority = priority
-      if (overrideProjects.length > 0) result.projects = overrideProjects
-      return { ...result, text: cleaned || result.text }
-    } catch {
-      return null
+      const result = classifyLocally(cleaned || text, projects, overrideProjects, priority)
+      result.tags = tags
+      return result
     } finally {
       setLoading(false)
     }

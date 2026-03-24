@@ -57,13 +57,14 @@ export default function CaptureBar() {
       }
 
       const { data, error: err } = await supabase
-        .from('tasks')
+        .from('ob_tasks')
         .insert({
           text: classified.text,
           projects: classified.projects,
           priority: classified.priority,
           reason: classified.reason,
           type: classified.type,
+          tags: classified.tags ?? [],
           links: linkedIds,
         })
         .select()
@@ -125,6 +126,7 @@ export default function CaptureBar() {
       <p className="mt-2 text-[11px] text-[#bbb] px-1">
         Atalhos: <code className="bg-[#f0f0ee] px-1 rounded">@projeto</code>{' '}
         <code className="bg-[#f0f0ee] px-1 rounded">#prioridade</code>{' '}
+        <code className="bg-[#f0f0ee] px-1 rounded">#tag</code>{' '}
         <code className="bg-[#f0f0ee] px-1 rounded">[[tarefa]]</code>
       </p>
     </div>

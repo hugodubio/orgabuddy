@@ -1,8 +1,8 @@
 export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
-export type TaskSource = 'manual' | 'gmail'
-export type View = 'focus' | 'graph' | 'note'
+export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes'
 
 export interface Task {
   id: number
@@ -14,7 +14,10 @@ export interface Task {
   done: boolean
   source: TaskSource
   source_email_id: string | null
+  source_id: string | null
   links: number[]
+  external_links: string[]
+  tags: string[]
   created_at: string
   updated_at: string
 }
@@ -25,6 +28,15 @@ export interface ClassifyResult {
   priority: Priority
   reason: string
   type: TaskType
+  tags: string[]
+}
+
+export interface ObNote {
+  id: number
+  title: string
+  content: string
+  created_at: string
+  updated_at: string
 }
 
 export interface ProjectDef {
@@ -33,6 +45,8 @@ export interface ProjectDef {
   color_bg: string
   color_text: string
   dot_color: string
+  parent_id: string | null
+  note: string | null
 }
 
 export interface Note {

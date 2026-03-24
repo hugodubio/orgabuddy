@@ -1,12 +1,6 @@
 import { useState } from 'react'
-import Anthropic from '@anthropic-ai/sdk'
 import type { ClassifyResult, Priority } from '../types'
 import { useProjectsStore } from '../store/projects'
-
-const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
-  dangerouslyAllowBrowser: true,
-})
 
 function extractShortcuts(text: string, projectIds: string[]) {
   const PRIORITIES: Record<string, Priority> = {
@@ -53,13 +47,19 @@ Prioridade: alta=urgente/deadline, média=importante, baixa=quando houver tempo`
 
     setLoading(true)
     try {
-      const msg = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 256,
-        system,
-        messages: [{ role: 'user', content: cleaned }],
-      })
-      const result: ClassifyResult = JSON.parse((msg.content[0] as { text: string }).text.trim())
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/classify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ text: cleaned, projects }),
+        }
+      )
+      if (!res.ok) return null
+      const result: ClassifyResult = await res.json()
       if (priority) result.priority = priority
       if (overrideProjects.length > 0) result.projects = overrideProjects
       return { ...result, text: cleaned || result.text }

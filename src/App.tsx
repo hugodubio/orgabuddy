@@ -11,7 +11,6 @@ import DailyNote from './components/DailyNote'
 import CalendarView from './components/CalendarView'
 import ProjectNote from './components/ProjectNote'
 import FreeNotes from './components/FreeNotes'
-import ClimbsView from './components/ClimbsView'
 import CommandPalette from './components/CommandPalette'
 
 function ViewToggle() {
@@ -165,11 +164,6 @@ export default function App() {
           </div>
         )}
 
-        {view === 'climbs' && (
-          <div className="max-w-2xl mx-auto w-full">
-            <ClimbsView />
-          </div>
-        )}
       </main>
 
       {paletteOpen && (

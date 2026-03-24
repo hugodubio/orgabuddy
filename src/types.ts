@@ -2,7 +2,7 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'climbs'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes'
 
 export interface Task {
   id: number

@@ -1,14 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {
-  box-sizing: border-box;
+:root {
+  /* Content area */
+  --bg:          #f5f1ea;
+  --surface:     #ffffff;
+  --border:      #e0d8cc;
+  --border-soft: #ede8e0;
+
+  /* Text hierarchy — 3 níveis muito distintos */
+  --text-1: #1a1510;   /* headings, primary */
+  --text-2: #5c5248;   /* secondary labels */
+  --text-3: #a09688;   /* faint/placeholder */
+
+  /* Sidebar (dark) */
+  --sidebar-bg:     #1c1814;
+  --sidebar-hover:  #2a2520;
+  --sidebar-active: #332e28;
+  --sidebar-text:   #c0b8ae;
+  --sidebar-text-active: #f0e8dc;
+  --sidebar-border: #2e2924;
+
+  /* Accent */
+  --amber:    #c8792a;
+  --amber-bg: #fdf3e4;
+
+  /* Priority colors */
+  --red:    #d95b4a;
+  --yellow: #c8922a;
+  --slate:  #8a9aaa;
 }
 
+* { box-sizing: border-box; }
+
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #ffffff;
-  color: #1a1a1a;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* Selection */
+::selection { background: var(--amber-bg); color: var(--amber); }
+
+/* Sidebar inputs */
+.sidebar-input::placeholder { color: #4a4540; }

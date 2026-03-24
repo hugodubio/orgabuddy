@@ -5,7 +5,15 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans:    ['DM Sans', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        mono:    ['DM Mono', 'monospace'],
+      },
+      colors: {
+        bg:      'var(--bg)',
+        surface: 'var(--surface)',
+        border:  'var(--border)',
+        amber:   'var(--amber)',
       },
     },
   },

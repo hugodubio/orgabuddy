@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTasksStore } from '../store/tasks'
+import { useProjectsStore } from '../store/projects'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 
@@ -49,9 +50,10 @@ interface AddEventFormProps {
 function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
   const [title, setTitle] = useState('')
   const [time, setTime] = useState('')
+  const [selectedProject, setSelectedProject] = useState<string>('')
   const [saving, setSaving] = useState(false)
-
   const [error, setError] = useState<string | null>(null)
+  const { projects } = useProjectsStore()
 
   const submit = async () => {
     const text = title.trim()
@@ -61,7 +63,7 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
     const reason = time ? `${date} às ${time}` : date
     const { error: err } = await supabase.from('ob_tasks').insert({
       text,
-      projects: [],
+      projects: selectedProject ? [selectedProject] : [],
       priority: 'média',
       reason,
       type: 'tarefa',
@@ -95,6 +97,17 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
         placeholder="Hora (ex: 20:00)"
         className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none placeholder:text-[#ccc] mb-2"
       />
+      <select
+        value={selectedProject}
+        onChange={(e) => setSelectedProject(e.target.value)}
+        className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none mb-2"
+        style={{ color: selectedProject ? '#1a1510' : '#aaa' }}
+      >
+        <option value="">Sem projeto</option>
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>{p.label}</option>
+        ))}
+      </select>
       {error && <p className="text-[11px] text-red-400 mb-1">{error}</p>}
       <div className="flex gap-2">
         <button
@@ -114,7 +127,10 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
 
 export default function CalendarView() {
   const { tasks, fetchTasks } = useTasksStore()
+  const { fetchProjects } = useProjectsStore()
   const today = new Date()
+
+  useEffect(() => { fetchProjects() }, [fetchProjects])
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)

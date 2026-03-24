@@ -14,6 +14,7 @@ const GROUPS = [
 function InlineAdd({ priority, onDone }: { priority: Priority; onDone: () => void }) {
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const ref = useRef<HTMLTextAreaElement>(null)
   const { classify } = useClassify()
   const { addTask, fetchTasks } = useTasksStore()
@@ -24,28 +25,33 @@ function InlineAdd({ priority, onDone }: { priority: Priority; onDone: () => voi
     const text = value.trim()
     if (!text || saving) return
     setSaving(true)
+    setError(null)
     try {
       const classified = await classify(text)
-      if (!classified) return
-      const { data, error } = await supabase
+      if (!classified) { setError('Erro ao classificar'); setSaving(false); return }
+      const { data, error: err } = await supabase
         .from('ob_tasks')
         .insert({
           text: classified.text,
           projects: classified.projects,
-          priority,               // força a prioridade do grupo
+          priority,
           reason: classified.reason,
           type: classified.type,
           links: [],
         })
         .select()
         .single()
-      if (!error && data) {
-        addTask(data as Parameters<typeof addTask>[0])
-        fetchTasks()
+      if (err || !data) {
+        setError(err?.message ?? 'Erro ao guardar')
+        setSaving(false)
+        return
       }
-    } finally {
-      setSaving(false)
+      addTask(data as Parameters<typeof addTask>[0])
+      fetchTasks()
       onDone()
+    } catch (e) {
+      setError(String(e))
+      setSaving(false)
     }
   }
 
@@ -64,6 +70,7 @@ function InlineAdd({ priority, onDone }: { priority: Priority; onDone: () => voi
         disabled={saving}
         className="w-full px-3 py-2.5 text-[13px] text-[#1a1a1a] placeholder:text-[#bbb] outline-none resize-none disabled:opacity-50"
       />
+      {error && <p className="px-3 pb-1 text-[11px] text-red-400">{error}</p>}
       <div className="flex items-center gap-2 px-3 pb-2.5">
         <button
           onClick={submit}

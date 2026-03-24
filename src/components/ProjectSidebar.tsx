@@ -134,6 +134,19 @@ export default function ProjectSidebar() {
           <span>Calendário</span>
         </button>
 
+        {/* Climbs */}
+        <button
+          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('climbs') }}
+          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[13px] mb-0.5 ${
+            view === 'climbs' ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#6b6b6b] hover:bg-white/60'
+          }`}
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+            <path d="M2 10L5 5l2.5 3L9 4l1 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span>Climbs</span>
+        </button>
+
         {/* Notas livres */}
         <button
           onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('notes') }}

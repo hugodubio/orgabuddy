@@ -4,6 +4,8 @@ import type { Task, Project, View } from '../types'
 
 const PRIORITY_ORDER: Record<string, number> = { alta: 0, média: 1, baixa: 2 }
 
+export type DisplayMode = 'list' | 'kanban' | 'table'
+
 interface TasksState {
   tasks: Task[]
   loading: boolean
@@ -12,10 +14,12 @@ interface TasksState {
   activeTag: string | null
   onlyUrgent: boolean
   view: View
+  displayMode: DisplayMode
   setActiveProject: (p: Project | null) => void
   setActiveTag: (tag: string | null) => void
   setOnlyUrgent: (v: boolean) => void
   setView: (v: View) => void
+  setDisplayMode: (m: DisplayMode) => void
   fetchTasks: () => Promise<void>
   addTask: (task: Task) => void
   toggleDone: (id: number) => Promise<void>
@@ -34,11 +38,13 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   activeTag: null,
   onlyUrgent: false,
   view: 'focus',
+  displayMode: 'list',
 
   setActiveProject: (p) => set({ activeProject: p, activeTag: null, view: 'focus' }),
   setActiveTag: (tag) => set({ activeTag: tag, activeProject: null, onlyUrgent: false, view: 'focus' }),
   setOnlyUrgent: (v) => set({ onlyUrgent: v, activeTag: null, view: 'focus' }),
   setView: (v) => set({ view: v }),
+  setDisplayMode: (m) => set({ displayMode: m }),
 
   fetchTasks: async () => {
     set({ loading: true })

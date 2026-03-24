@@ -4,22 +4,69 @@ import { useProjectsStore } from './store/projects'
 import ProjectSidebar from './components/ProjectSidebar'
 import CaptureBar from './components/CaptureBar'
 import TaskList from './components/TaskList'
+import KanbanView from './components/KanbanView'
+import TableView from './components/TableView'
 import GraphView from './components/GraphView'
 import DailyNote from './components/DailyNote'
 import CalendarView from './components/CalendarView'
 import ProjectNote from './components/ProjectNote'
 import FreeNotes from './components/FreeNotes'
+import ClimbsView from './components/ClimbsView'
 import CommandPalette from './components/CommandPalette'
 
+function ViewToggle() {
+  const { displayMode, setDisplayMode } = useTasksStore()
+  const modes = [
+    { key: 'list' as const, icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">
+        <line x1="1" y1="3" x2="13" y2="3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="1" y1="11" x2="13" y2="11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    )},
+    { key: 'kanban' as const, icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">
+        <rect x="1" y="1" width="3.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+        <rect x="5.25" y="1" width="3.5" height="8" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+        <rect x="9.5" y="1" width="3.5" height="10" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+      </svg>
+    )},
+    { key: 'table' as const, icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">
+        <rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+        <line x1="1" y1="5" x2="13" y2="5" stroke="currentColor" strokeWidth="1"/>
+        <line x1="5" y1="5" x2="5" y2="13" stroke="currentColor" strokeWidth="1"/>
+      </svg>
+    )},
+  ]
+  return (
+    <div className="flex items-center gap-0.5 bg-[#f0f0ee] rounded-lg p-0.5">
+      {modes.map(({ key, icon }) => (
+        <button
+          key={key}
+          onClick={() => setDisplayMode(key)}
+          className={`p-1.5 rounded-md transition-colors ${
+            displayMode === key
+              ? 'bg-white text-[#1a1a1a] shadow-sm'
+              : 'text-[#aaa] hover:text-[#666]'
+          }`}
+          title={key}
+        >
+          {icon}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function App() {
-  const { tasks, loading, activeProject, activeTag, onlyUrgent, view, fetchTasks } = useTasksStore()
+  const { tasks, loading, activeProject, activeTag, onlyUrgent, view, displayMode, fetchTasks } = useTasksStore()
   const { fetchProjects } = useProjectsStore()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => { fetchTasks(); fetchProjects() }, [fetchTasks, fetchProjects])
 
-  // Cmd+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -60,19 +107,37 @@ export default function App() {
     <div className="flex min-h-screen">
       <ProjectSidebar />
 
-      <main className="flex-1 px-8 py-10 flex flex-col">
+      <main className={`flex-1 flex flex-col ${view === 'focus' && displayMode === 'kanban' ? 'px-6 py-8 overflow-x-auto' : 'px-8 py-10'}`}>
         {view === 'focus' && (
-          <div className="max-w-2xl mx-auto w-full">
-            <h1 className="text-[22px] font-semibold text-[#1a1a1a] mb-6">{title}</h1>
-            <div className="mb-8">
-              <CaptureBar />
+          <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-[22px] font-semibold text-[#1a1a1a]">{title}</h1>
+              <ViewToggle />
             </div>
-            {loading ? (
-              <div className="text-[13px] text-[#bbb] text-center py-12">a carregar…</div>
-            ) : (
-              <TaskList tasks={visible} />
+
+            {displayMode === 'list' && (
+              <>
+                <div className="mb-8"><CaptureBar /></div>
+                {loading ? (
+                  <div className="text-[13px] text-[#bbb] text-center py-12">a carregar…</div>
+                ) : (
+                  <TaskList tasks={visible} />
+                )}
+                {activeProject && <ProjectNote projectId={activeProject} />}
+              </>
             )}
-            {activeProject && <ProjectNote projectId={activeProject} />}
+
+            {displayMode === 'kanban' && (
+              <KanbanView tasks={visible} />
+            )}
+
+            {displayMode === 'table' && (
+              <>
+                <div className="mb-6"><CaptureBar /></div>
+                <TableView tasks={visible} />
+              </>
+            )}
           </div>
         )}
 
@@ -97,6 +162,12 @@ export default function App() {
         {view === 'notes' && (
           <div className="flex-1 flex min-h-0 -mx-8 -my-10">
             <FreeNotes />
+          </div>
+        )}
+
+        {view === 'climbs' && (
+          <div className="max-w-2xl mx-auto w-full">
+            <ClimbsView />
           </div>
         )}
       </main>

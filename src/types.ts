@@ -2,7 +2,7 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'climbs'
 
 export interface Task {
   id: number
@@ -29,6 +29,22 @@ export interface ClassifyResult {
   reason: string
   type: TaskType
   tags: string[]
+}
+
+export interface Habit {
+  id: number
+  text: string
+  frequency: 'daily' | 'weekly'
+  days_of_week: number[]
+  color: string
+  created_at: string
+}
+
+export interface HabitLog {
+  id: number
+  habit_id: number
+  date: string
+  done: boolean
 }
 
 export interface ObNote {

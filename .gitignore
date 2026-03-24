@@ -6,4 +6,6 @@ coverage
 dist
 *.log
 prisma/dev.db
+orgabuddy.db
+gmail_token.json
 .vercel

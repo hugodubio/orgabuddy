@@ -1,30 +1,6 @@
-import type { ClassifyResult, Priority, ProjectDef } from '../types'
+import { useState } from 'react'
+import type { ClassifyResult, Priority } from '../types'
 import { useProjectsStore } from '../store/projects'
-
-const HIGH_KEYWORDS = ['urgente', 'hoje', 'amanhã', 'deadline', 'prazo', 'entrega', 'reunião', 'meeting', 'apresentação', 'show', 'evento', 'concerto', 'asap', 'agora']
-const LOW_KEYWORDS = ['quando puder', 'quando der', 'algum dia', 'talvez', 'podia', 'seria fixe', 'ver se', 'explorar']
-const IDEA_KEYWORDS = ['ideia', 'e se', 'talvez', 'podia', 'seria fixe', 'explorar', 'imaginar', 'pensar em']
-
-function detectPriority(text: string): Priority {
-  const lower = text.toLowerCase()
-  if (HIGH_KEYWORDS.some((k) => lower.includes(k))) return 'alta'
-  if (LOW_KEYWORDS.some((k) => lower.includes(k))) return 'baixa'
-  return 'média'
-}
-
-function detectType(text: string): 'tarefa' | 'ideia' {
-  const lower = text.toLowerCase()
-  if (IDEA_KEYWORDS.some((k) => lower.includes(k))) return 'ideia'
-  return 'tarefa'
-}
-
-function detectProjects(text: string, projects: ProjectDef[]): string[] {
-  const lower = text.toLowerCase()
-  const matched = projects.filter(
-    (p) => lower.includes(p.id.toLowerCase()) || lower.includes(p.label.toLowerCase())
-  ).map((p) => p.id)
-  return matched.length > 0 ? matched : ['geral']
-}
 
 function extractShortcuts(text: string, projectIds: string[]) {
   const PRIORITIES: Record<string, Priority> = {
@@ -51,25 +27,37 @@ function extractShortcuts(text: string, projectIds: string[]) {
 }
 
 export function useClassify() {
+  const [loading, setLoading] = useState(false)
   const { projects } = useProjectsStore()
 
   const classify = async (text: string): Promise<ClassifyResult | null> => {
     const projectIds = projects.map((p) => p.id)
-    const { cleaned, priority: shortcutPriority, projects: overrideProjects } = extractShortcuts(text, projectIds)
+    const { cleaned, priority, projects: overrideProjects } = extractShortcuts(text, projectIds)
 
-    const finalText = cleaned || text
-    const priority = shortcutPriority ?? detectPriority(finalText)
-    const type = detectType(finalText)
-    const detectedProjects = overrideProjects.length > 0 ? overrideProjects : detectProjects(finalText, projects)
-
-    return {
-      text: finalText,
-      projects: detectedProjects,
-      priority,
-      reason: '',
-      type,
+    setLoading(true)
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/classify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ text: cleaned || text, projects }),
+        }
+      )
+      if (!res.ok) return null
+      const result: ClassifyResult = await res.json()
+      if (priority) result.priority = priority
+      if (overrideProjects.length > 0) result.projects = overrideProjects
+      return { ...result, text: cleaned || result.text }
+    } catch {
+      return null
+    } finally {
+      setLoading(false)
     }
   }
 
-  return { classify, loading: false }
+  return { classify, loading }
 }

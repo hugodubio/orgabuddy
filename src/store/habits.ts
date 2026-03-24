@@ -5,6 +5,7 @@ import type { Habit, HabitLog } from '../types'
 interface HabitsState {
   habits: Habit[]
   logs: HabitLog[]
+  toggling: Set<string> // "habitId-date" em processamento
   fetchHabits: () => Promise<void>
   fetchLogs: (since: string) => Promise<void>
   addHabit: (text: string, color?: string) => Promise<void>
@@ -22,6 +23,7 @@ let colorIndex = 0
 export const useHabitsStore = create<HabitsState>((set, get) => ({
   habits: [],
   logs: [],
+  toggling: new Set(),
 
   fetchHabits: async () => {
     const { data } = await supabase.from('ob_habits').select('*').order('created_at')
@@ -56,17 +58,28 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   },
 
   toggleLog: async (habitId: number, date: string) => {
-    const existing = get().logs.find((l) => l.habit_id === habitId && l.date === date)
-    if (existing) {
-      await supabase.from('ob_habit_logs').delete().eq('id', existing.id)
-      set((s) => ({ logs: s.logs.filter((l) => l.id !== existing.id) }))
-    } else {
-      const { data } = await supabase
-        .from('ob_habit_logs')
-        .insert({ habit_id: habitId, date, done: true })
-        .select()
-        .single()
-      if (data) set((s) => ({ logs: [...s.logs, data as HabitLog] }))
+    const key = `${habitId}-${date}`
+    if (get().toggling.has(key)) return // evita race condition de duplo clique
+    set((s) => ({ toggling: new Set([...s.toggling, key]) }))
+    try {
+      const existing = get().logs.find((l) => l.habit_id === habitId && l.date === date)
+      if (existing) {
+        const { error } = await supabase.from('ob_habit_logs').delete().eq('id', existing.id)
+        if (!error) set((s) => ({ logs: s.logs.filter((l) => l.id !== existing.id) }))
+      } else {
+        const { data, error } = await supabase
+          .from('ob_habit_logs')
+          .insert({ habit_id: habitId, date, done: true })
+          .select()
+          .single()
+        if (!error && data) set((s) => ({ logs: [...s.logs, data as HabitLog] }))
+      }
+    } finally {
+      set((s) => {
+        const next = new Set(s.toggling)
+        next.delete(key)
+        return { toggling: next }
+      })
     }
   },
 }))

@@ -101,9 +101,10 @@ export default function KanbanView({ tasks }: Props) {
     const text = newText.trim()
     if (!text || saving) return
     setSaving(true)
-    const classified = await classify(text)
-    if (classified) {
-      const { data } = await supabase
+    try {
+      const classified = await classify(text)
+      if (!classified) return
+      const { data, error } = await supabase
         .from('ob_tasks')
         .insert({
           text: classified.text,
@@ -116,14 +117,14 @@ export default function KanbanView({ tasks }: Props) {
         })
         .select()
         .single()
-      if (data) {
+      if (!error && data) {
         addTask(data as Parameters<typeof addTask>[0])
-        await fetchTasks()
       }
+      setNewText('')
+      setAddingIn(null)
+    } finally {
+      setSaving(false)
     }
-    setNewText('')
-    setAddingIn(null)
-    setSaving(false)
   }
 
   return (

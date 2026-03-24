@@ -25,6 +25,7 @@ export default function TableView({ tasks }: Props) {
   const [dir, setDir] = useState<SortDir>('asc')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editText, setEditText] = useState('')
+  const cancelledRef = { current: false }
 
   const getProject = (id: string) => projects.find((p) => p.id === id)
 
@@ -117,9 +118,9 @@ export default function TableView({ tasks }: Props) {
                     onChange={(e) => setEditText(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') saveEdit(task.id)
-                      if (e.key === 'Escape') setEditingId(null)
+                      if (e.key === 'Escape') { cancelledRef.current = true; setEditingId(null) }
                     }}
-                    onBlur={() => saveEdit(task.id)}
+                    onBlur={() => { if (!cancelledRef.current) saveEdit(task.id); cancelledRef.current = false }}
                     className="w-full outline-none border-b border-[#3b82f6] text-[13px] text-[#1a1a1a] bg-transparent"
                   />
                 ) : (

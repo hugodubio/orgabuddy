@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTasksStore } from '../store/tasks'
 import { useProjectsStore } from '../store/projects'
 import type { ProjectDef } from '../types'
@@ -44,16 +44,29 @@ export default function ProjectSidebar() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
   const handleSync = async () => {
-    const { added } = await syncFromMystic()
-    setSyncMsg(`↑ ${added} itens sincronizados`)
+    try {
+      const { added } = await syncFromMystic()
+      setSyncMsg(`↑ ${added} itens sincronizados`)
+    } catch {
+      setSyncMsg('Erro ao sincronizar')
+    }
     setTimeout(() => setSyncMsg(null), 3000)
   }
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
 
-  const countFor = (id: string) =>
-    tasks.filter((t) => !t.done && t.projects.includes(id)).length
+  const pendingByProject = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const t of tasks) {
+      if (t.done) continue
+      for (const pid of t.projects) {
+        map[pid] = (map[pid] ?? 0) + 1
+      }
+    }
+    return map
+  }, [tasks])
 
+  const countFor = (id: string) => pendingByProject[id] ?? 0
   const totalPending = tasks.filter((t) => !t.done).length
 
   const submitNew = async () => {

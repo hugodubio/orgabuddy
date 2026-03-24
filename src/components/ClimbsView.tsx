@@ -47,7 +47,7 @@ export default function ClimbsView() {
   useEffect(() => {
     fetchHabits()
     fetchLogs(since)
-  }, [fetchHabits, fetchLogs, since])
+  }, [since]) // fetchHabits/fetchLogs são estáveis no Zustand store — não precisam de deps
 
   const isDone = (habitId: number, date: string) =>
     logs.some((l) => l.habit_id === habitId && l.date === date)

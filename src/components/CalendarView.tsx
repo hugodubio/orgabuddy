@@ -51,12 +51,15 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
   const [time, setTime] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [error, setError] = useState<string | null>(null)
+
   const submit = async () => {
     const text = title.trim()
     if (!text || saving) return
     setSaving(true)
+    setError(null)
     const reason = time ? `${date} às ${time}` : date
-    await supabase.from('ob_tasks').insert({
+    const { error: err } = await supabase.from('ob_tasks').insert({
       text,
       projects: [],
       priority: 'média',
@@ -67,6 +70,7 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
       links: [],
     })
     setSaving(false)
+    if (err) { setError('Erro ao guardar evento'); return }
     onSaved()
     onClose()
   }
@@ -91,6 +95,7 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
         placeholder="Hora (ex: 20:00)"
         className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none placeholder:text-[#ccc] mb-2"
       />
+      {error && <p className="text-[11px] text-red-400 mb-1">{error}</p>}
       <div className="flex gap-2">
         <button
           onClick={submit}

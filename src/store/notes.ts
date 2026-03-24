@@ -48,11 +48,13 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   deleteNote: async (id) => {
-    await supabase.from('ob_notes').delete().eq('id', id)
-    set((s) => ({
-      notes: s.notes.filter((n) => n.id !== id),
-      selectedId: s.selectedId === id ? null : s.selectedId,
-    }))
+    const { error } = await supabase.from('ob_notes').delete().eq('id', id)
+    if (!error) {
+      set((s) => ({
+        notes: s.notes.filter((n) => n.id !== id),
+        selectedId: s.selectedId === id ? null : s.selectedId,
+      }))
+    }
   },
 
   selectNote: (id) => set({ selectedId: id }),

@@ -138,7 +138,7 @@ export default function KanbanView({ tasks }: Props) {
             key={key}
             className="flex flex-col w-72 shrink-0"
             onDragOver={(e) => { e.preventDefault(); setDragOver(key) }}
-            onDragLeave={() => setDragOver(null)}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null) }}
             onDrop={() => handleDrop(key)}
           >
             {/* Column header */}

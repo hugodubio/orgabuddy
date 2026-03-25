@@ -2,7 +2,7 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search'
 
 export interface Task {
   id: number
@@ -52,8 +52,19 @@ export interface ObNote {
   id: number
   title: string
   content: string
+  projects: string[]
   created_at: string
   updated_at: string
+}
+
+export interface DayLog {
+  id: number
+  date: string
+  note_content: string
+  tasks_done: { id: number; text: string; projects: string[] }[]
+  tasks_created: { id: number; text: string; projects: string[] }[]
+  projects: string[]
+  created_at: string
 }
 
 export interface ProjectDef {

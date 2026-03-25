@@ -12,6 +12,7 @@ import CalendarView from './components/CalendarView'
 import ProjectNote from './components/ProjectNote'
 import FreeNotes from './components/FreeNotes'
 import CommandPalette from './components/CommandPalette'
+import SearchView from './components/SearchView'
 
 function ViewToggle() {
   const { displayMode, setDisplayMode } = useTasksStore()
@@ -88,6 +89,12 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
       <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
         <path d="M3 2h6l3 3v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.3"/>
         <path d="M9 2v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+      </svg>
+    )},
+    { v: 'search' as const, label: 'Busca', icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+        <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.3"/>
+        <line x1="9" y1="9" x2="13" y2="13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
       </svg>
     )},
   ]
@@ -247,6 +254,12 @@ export default function App() {
         {view === 'notes' && (
           <div className="flex-1 flex min-h-0 -mx-4 md:-mx-8 -my-6 md:-my-10 mb-0">
             <FreeNotes />
+          </div>
+        )}
+
+        {view === 'search' && (
+          <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full">
+            <SearchView />
           </div>
         )}
       </main>

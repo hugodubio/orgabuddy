@@ -7,7 +7,7 @@ interface NotesState {
   selectedId: number | null
   fetchNotes: () => Promise<void>
   createNote: () => Promise<ObNote | null>
-  updateNote: (id: number, title: string, content: string) => Promise<void>
+  updateNote: (id: number, title: string, content: string, projects?: string[]) => Promise<void>
   deleteNote: (id: number) => Promise<void>
   selectNote: (id: number | null) => void
 }
@@ -37,13 +37,12 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     return null
   },
 
-  updateNote: async (id, title, content) => {
-    await supabase
-      .from('ob_notes')
-      .update({ title, content, updated_at: new Date().toISOString() })
-      .eq('id', id)
+  updateNote: async (id, title, content, projects) => {
+    const payload: Record<string, unknown> = { title, content, updated_at: new Date().toISOString() }
+    if (projects !== undefined) payload.projects = projects
+    await supabase.from('ob_notes').update(payload).eq('id', id)
     set((s) => ({
-      notes: s.notes.map((n) => (n.id === id ? { ...n, title, content } : n)),
+      notes: s.notes.map((n) => (n.id === id ? { ...n, title, content, ...(projects !== undefined ? { projects } : {}) } : n)),
     }))
   },
 

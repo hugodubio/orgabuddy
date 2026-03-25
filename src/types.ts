@@ -18,6 +18,7 @@ export interface Task {
   links: number[]
   external_links: string[]
   tags: string[]
+  note: string | null
   created_at: string
   updated_at: string
 }

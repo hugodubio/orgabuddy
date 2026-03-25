@@ -58,10 +58,76 @@ function ViewToggle() {
   )
 }
 
+// Bottom nav for mobile
+function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
+  const { view, setView, setActiveProject, setOnlyUrgent } = useTasksStore()
+  const items = [
+    { v: 'focus' as const, label: 'Foco', icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
+        <circle cx="7" cy="7" r="2" fill="currentColor"/>
+      </svg>
+    )},
+    { v: 'calendar' as const, label: 'Cal.', icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+        <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+        <line x1="1.5" y1="6" x2="12.5" y2="6" stroke="currentColor" strokeWidth="1"/>
+        <line x1="4.5" y1="1" x2="4.5" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="9.5" y1="1" x2="9.5" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    )},
+    { v: 'notes' as const, label: 'Notas', icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+        <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+        <line x1="4" y1="5" x2="10" y2="5" stroke="currentColor" strokeWidth="1"/>
+        <line x1="4" y1="7.5" x2="10" y2="7.5" stroke="currentColor" strokeWidth="1"/>
+        <line x1="4" y1="10" x2="7" y2="10" stroke="currentColor" strokeWidth="1"/>
+      </svg>
+    )},
+    { v: 'note' as const, label: 'Diário', icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+        <path d="M3 2h6l3 3v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.3"/>
+        <path d="M9 2v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+      </svg>
+    )},
+  ]
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-30 flex items-center border-t"
+      style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {items.map(({ v, label, icon }) => (
+        <button
+          key={v}
+          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView(v) }}
+          className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] transition-colors"
+          style={{ color: view === v ? 'var(--amber)' : 'var(--sidebar-text)' }}
+        >
+          {icon}
+          {label}
+        </button>
+      ))}
+      {/* Menu button */}
+      <button
+        onClick={onMenuOpen}
+        className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] transition-colors"
+        style={{ color: 'var(--sidebar-text)' }}
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+          <line x1="1" y1="3.5" x2="13" y2="3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          <line x1="1" y1="7" x2="10" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          <line x1="1" y1="10.5" x2="7" y2="10.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        </svg>
+        Menu
+      </button>
+    </nav>
+  )
+}
+
 export default function App() {
   const { tasks, loading, activeProject, activeTag, onlyUrgent, view, displayMode, fetchTasks } = useTasksStore()
   const { fetchProjects } = useProjectsStore()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => { fetchTasks(); fetchProjects() }, [fetchTasks, fetchProjects])
@@ -76,6 +142,9 @@ export default function App() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  // Close sidebar on view change (mobile)
+  useEffect(() => { setSidebarOpen(false) }, [view, activeProject])
 
   const focusCapture = useCallback(() => {
     setTimeout(() => {
@@ -104,14 +173,33 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen">
-      <ProjectSidebar />
+      {/* Sidebar — fixed drawer on mobile, static on desktop */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 transition-transform duration-200 md:static md:translate-x-0 md:z-auto ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <ProjectSidebar onClose={() => setSidebarOpen(false)} />
+      </div>
 
-      <main className={`flex-1 flex flex-col ${view === 'focus' && displayMode === 'kanban' ? 'px-6 py-8 overflow-x-auto' : 'px-8 py-10'}`}>
+      {/* Backdrop on mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className={`flex-1 flex flex-col ${
+        view === 'focus' && displayMode === 'kanban'
+          ? 'px-4 md:px-6 py-6 md:py-8 overflow-x-auto'
+          : 'px-4 md:px-8 py-6 md:py-10'
+      } pb-20 md:pb-6`}>
+
         {view === 'focus' && (
           <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-[22px] font-semibold text-[#1a1a1a]">{title}</h1>
+              <h1 className="text-[20px] md:text-[22px] font-semibold" style={{ color: 'var(--text-1)' }}>{title}</h1>
               <ViewToggle />
             </div>
 
@@ -119,7 +207,7 @@ export default function App() {
               <>
                 <div className="mb-8"><CaptureBar /></div>
                 {loading ? (
-                  <div className="text-[13px] text-[#bbb] text-center py-12">a carregar…</div>
+                  <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
                 ) : (
                   <TaskList tasks={visible} />
                 )}
@@ -127,9 +215,7 @@ export default function App() {
               </>
             )}
 
-            {displayMode === 'kanban' && (
-              <KanbanView tasks={visible} />
-            )}
+            {displayMode === 'kanban' && <KanbanView tasks={visible} />}
 
             {displayMode === 'table' && (
               <>
@@ -159,12 +245,14 @@ export default function App() {
         )}
 
         {view === 'notes' && (
-          <div className="flex-1 flex min-h-0 -mx-8 -my-10">
+          <div className="flex-1 flex min-h-0 -mx-4 md:-mx-8 -my-6 md:-my-10 mb-0">
             <FreeNotes />
           </div>
         )}
-
       </main>
+
+      {/* Bottom nav — mobile only */}
+      <BottomNav onMenuOpen={() => setSidebarOpen(true)} />
 
       {paletteOpen && (
         <CommandPalette

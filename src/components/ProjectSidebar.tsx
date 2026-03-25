@@ -34,7 +34,7 @@ export function useProjectColors() {
   return (id: string) => projects.find((p) => p.id === id)
 }
 
-export default function ProjectSidebar() {
+export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const { tasks, syncing, activeProject, activeTag, onlyUrgent, view, setActiveProject, setActiveTag, setOnlyUrgent, setView, syncFromMystic } = useTasksStore()
   const { projects, fetchProjects, addProject, deleteProject } = useProjectsStore()
   const [adding, setAdding] = useState<string | null>(null) // null = top-level, string = parentId
@@ -103,7 +103,10 @@ export default function ProjectSidebar() {
           >
             <SyncIcon spinning={syncing} />
           </button>
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#5a5248', background: '#2a2520', letterSpacing: '0.05em' }}>⌘K</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono hidden md:inline" style={{ color: '#5a5248', background: '#2a2520', letterSpacing: '0.05em' }}>⌘K</span>
+          {onClose && (
+            <button onClick={onClose} className="md:hidden text-lg leading-none" style={{ color: 'var(--sidebar-text)' }}>×</button>
+          )}
         </div>
       </div>
 

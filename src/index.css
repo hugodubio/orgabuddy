@@ -55,3 +55,8 @@ body {
 
 /* Sidebar inputs */
 .sidebar-input::placeholder { color: #4a4540; }
+
+/* Mobile safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+}

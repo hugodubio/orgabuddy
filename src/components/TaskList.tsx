@@ -37,6 +37,7 @@ function InlineAdd({ priority, onDone }: { priority: Priority; onDone: () => voi
           priority,
           reason: classified.reason,
           type: classified.type,
+          tags: classified.tags ?? [],
           links: [],
         })
         .select()

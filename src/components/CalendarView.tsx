@@ -68,6 +68,7 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
       reason,
       type: 'tarefa',
       source: 'calendar',
+      tags: [],
       done: false,
       links: [],
     })
@@ -127,10 +128,7 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
 
 export default function CalendarView() {
   const { tasks, fetchTasks } = useTasksStore()
-  const { fetchProjects } = useProjectsStore()
   const today = new Date()
-
-  useEffect(() => { fetchProjects() }, [fetchProjects])
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)

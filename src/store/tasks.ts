@@ -65,18 +65,25 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   toggleDone: async (id) => {
     const task = get().tasks.find((t) => t.id === id)
     if (!task) return
-    await supabase
-      .from('ob_tasks')
-      .update({ done: !task.done, updated_at: new Date().toISOString() })
-      .eq('id', id)
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
     }))
+    const { error } = await supabase
+      .from('ob_tasks')
+      .update({ done: !task.done, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) {
+      set((s) => ({
+        tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: task.done } : t)),
+      }))
+    }
   },
 
   deleteTask: async (id) => {
-    await supabase.from('ob_tasks').delete().eq('id', id)
+    const prev = get().tasks
     set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }))
+    const { error } = await supabase.from('ob_tasks').delete().eq('id', id)
+    if (error) set({ tasks: prev })
   },
 
   updateLinks: async (id, links) => {

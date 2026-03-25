@@ -48,7 +48,6 @@ export default function TaskCard({ task }: Props) {
       className={`group flex items-start gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer ${
         task.done ? 'opacity-50' : ''
       }`}
-      style={{ '--hover-bg': 'var(--border-soft)' } as React.CSSProperties}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--border-soft)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = '')}
     >

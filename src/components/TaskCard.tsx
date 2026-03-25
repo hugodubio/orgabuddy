@@ -72,11 +72,11 @@ export default function TaskCard({ task }: Props) {
   }, [task.id, updateTaskField])
 
   return (
-    <div className={`group rounded-lg transition-colors ${task.done ? 'opacity-50' : ''}`}>
+    <div className={`group rounded-lg transition-colors ${task.done ? 'opacity-40' : ''}`}>
       {/* Row */}
       <div
-        className="flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer"
-        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--border-soft)')}
+        className="flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer relative overflow-hidden"
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface)')}
         onMouseLeave={(e) => (e.currentTarget.style.background = '')}
       >
         {/* Checkbox */}
@@ -102,8 +102,8 @@ export default function TaskCard({ task }: Props) {
           {/* Badges */}
           <div className="flex flex-wrap gap-1 mt-1.5">
             {/* Priority pill */}
-            <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] font-medium"
-              style={{ background: priorityCfg.bg, color: priorityCfg.color }}>
+            <span className="text-[9px] px-1.5 py-[3px] font-bold tracking-wider uppercase"
+              style={{ background: priorityCfg.bg, color: priorityCfg.color, fontFamily: 'Syne, sans-serif', borderRadius: '2px' }}>
               {priorityCfg.label}
             </span>
 
@@ -194,7 +194,7 @@ export default function TaskCard({ task }: Props) {
           <div className="px-4 py-3 flex flex-wrap gap-4" style={{ borderBottom: '1px solid var(--border-soft)' }}>
             {/* Priority */}
             <div>
-              <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-3)' }}>Prioridade</p>
+              <p className="label-caps mb-1.5">Prioridade</p>
               <div className="flex gap-1">
                 {PRIORITY_CONFIG.map((p) => (
                   <button
@@ -214,7 +214,7 @@ export default function TaskCard({ task }: Props) {
 
             {/* Type */}
             <div>
-              <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-3)' }}>Tipo</p>
+              <p className="label-caps mb-1.5">Tipo</p>
               <div className="flex gap-1">
                 {(['tarefa', 'ideia'] as const).map((t) => (
                   <button
@@ -235,7 +235,7 @@ export default function TaskCard({ task }: Props) {
 
           {/* Note */}
           <div className="px-4 py-3" style={{ borderBottom: linkedTasks.length > 0 || backlinks.length > 0 || externalLinks.length > 0 ? '1px solid var(--border-soft)' : 'none' }}>
-            <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-3)' }}>Notas</p>
+            <p className="label-caps mb-1.5">Notas</p>
             <textarea
               defaultValue={task.note ?? ''}
               onChange={(e) => onNoteChange(e.target.value)}
@@ -251,7 +251,7 @@ export default function TaskCard({ task }: Props) {
             <div className="px-4 py-3 space-y-3">
               {linkedTasks.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-3)' }}>Ligações</p>
+                  <p className="label-caps mb-1">Ligações</p>
                   <div className="space-y-1">
                     {linkedTasks.map((lt) => (
                       <div key={lt.id} className="flex items-center gap-1 group/link">
@@ -270,7 +270,7 @@ export default function TaskCard({ task }: Props) {
 
               {backlinks.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-3)' }}>Referenciado por</p>
+                  <p className="label-caps mb-1">Referenciado por</p>
                   <div className="space-y-1">
                     {backlinks.map((bl) => (
                       <span key={bl.id} className="block text-[11px] rounded px-1.5 py-0.5 truncate"
@@ -284,7 +284,7 @@ export default function TaskCard({ task }: Props) {
 
               {(externalLinks.length > 0 || addingUrl) && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-3)' }}>Links</p>
+                  <p className="label-caps mb-1">Links</p>
                   <div className="space-y-1">
                     {externalLinks.map((url) => (
                       <div key={url} className="flex items-center gap-1 group/extlink">

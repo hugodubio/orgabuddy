@@ -1,37 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,600&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Content area */
-  --bg:          #f5f1ea;
-  --surface:     #ffffff;
-  --border:      #e0d8cc;
-  --border-soft: #ede8e0;
+  /* Content — warm but with more bite */
+  --bg:          #e9e2d4;
+  --surface:     #f4f0e8;
+  --border:      #cec6b8;
+  --border-soft: #ddd8ce;
 
-  /* Text hierarchy — 3 níveis muito distintos */
-  --text-1: #1a1510;   /* headings, primary */
-  --text-2: #5c5248;   /* secondary labels */
-  --text-3: #a09688;   /* faint/placeholder */
+  /* Text — high contrast */
+  --text-1: #0e0c09;
+  --text-2: #4a4138;
+  --text-3: #968b7e;
 
-  /* Sidebar (dark) */
-  --sidebar-bg:     #1c1814;
-  --sidebar-hover:  #2a2520;
-  --sidebar-active: #332e28;
-  --sidebar-text:   #c0b8ae;
-  --sidebar-text-active: #f0e8dc;
-  --sidebar-border: #2e2924;
+  /* Sidebar — near-black with warmth */
+  --sidebar-bg:     #0f0d0a;
+  --sidebar-hover:  #191612;
+  --sidebar-active: #1d1a15;
+  --sidebar-text:   #766e65;
+  --sidebar-text-active: #f2e8d8;
+  --sidebar-border: #1f1c17;
 
-  /* Accent */
-  --amber:    #c8792a;
-  --amber-bg: #fdf3e4;
+  /* Accent — more saturation */
+  --amber:    #cf6424;
+  --amber-bg: #fdefd9;
 
-  /* Priority colors */
-  --red:    #d95b4a;
-  --yellow: #c8922a;
-  --slate:  #8a9aaa;
+  /* Priority */
+  --red:    #c8402e;
+  --yellow: #c07e1a;
+  --slate:  #7d909e;
 }
 
 * { box-sizing: border-box; }
@@ -45,16 +45,53 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Film grain */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
 /* Scrollbars */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
 /* Selection */
-::selection { background: var(--amber-bg); color: var(--amber); }
+::selection { background: var(--amber); color: #fff; }
 
 /* Sidebar inputs */
-.sidebar-input::placeholder { color: #4a4540; }
+.sidebar-input { font-family: 'DM Sans', sans-serif; }
+.sidebar-input::placeholder { color: #3a3530; }
+
+/* Label caps — Syne uppercase labels throughout the app */
+.label-caps {
+  font-family: 'Syne', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+}
+
+/* Capture bar — amber focus ring */
+.capture-input:focus {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 12%, transparent);
+}
+
+.capture-input::placeholder {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text-3);
+}
 
 /* Mobile safe area */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

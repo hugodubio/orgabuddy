@@ -99,12 +99,12 @@ export default function CaptureBar() {
             if (e.key === 'Enter' && !linkQuery) submit()
             if (e.key === 'Escape') setLinkQuery(null)
           }}
-          placeholder="o que tens na cabeça? · #alta @arroz"
+          placeholder="o que tens na cabeça?"
           disabled={loading}
-          className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none transition-all pr-40 disabled:opacity-60"
+          className="capture-input w-full rounded-lg px-4 py-3.5 text-[14px] outline-none transition-all pr-40 disabled:opacity-60"
           style={{
-            background: error ? '#fef2f2' : 'var(--surface)',
-            border: error ? '1px solid #fca5a5' : '1px solid var(--border)',
+            background: error ? '#fdf0ee' : 'var(--surface)',
+            border: error ? '1.5px solid var(--red)' : '1.5px solid var(--border)',
             color: 'var(--text-1)',
           }}
         />

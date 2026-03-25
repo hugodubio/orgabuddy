@@ -206,7 +206,7 @@ export default function App() {
         {view === 'focus' && (
           <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-[20px] md:text-[22px] font-semibold" style={{ color: 'var(--text-1)' }}>{title}</h1>
+              <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 300, letterSpacing: '-0.02em' }}>{title}</h1>
               <ViewToggle />
             </div>
 

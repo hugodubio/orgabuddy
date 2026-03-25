@@ -77,22 +77,22 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
     setAdding(null)
   }
 
-  // helper classes
+  // helper classes — left amber border on active
   const navBtn = (active: boolean) =>
-    `w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors ${
+    `w-full flex items-center gap-2.5 py-[7px] pr-3 text-[13px] transition-all rounded-r-md ${
       active
-        ? 'bg-[#2e2922] text-[#f0e8dc]'
-        : 'text-[#8a8278] hover:bg-[#252118] hover:text-[#c8bfb4]'
+        ? 'pl-[10px] border-l-[2px] border-[var(--amber)] bg-[#1d1a15] text-[var(--sidebar-text-active)]'
+        : 'pl-3 border-l-[2px] border-transparent text-[var(--sidebar-text)] hover:bg-[#181510] hover:text-[#c8bfb4]'
     }`
 
   return (
     <aside className="w-[228px] shrink-0 h-screen sticky top-0 flex flex-col" style={{ background: 'var(--sidebar-bg)' }}>
       {/* Logo */}
-      <div className="px-4 pt-5 pb-4 flex items-center gap-2.5" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
-        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ background: 'var(--amber)' }}>
-          <span className="text-white text-[11px] font-bold font-display">O</span>
+      <div className="px-4 pt-5 pb-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
+        <div className="w-5 h-5 flex items-center justify-center shrink-0" style={{ background: 'var(--amber)', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+          <span className="text-white text-[9px] font-bold" style={{ fontFamily: 'Syne, sans-serif' }}>O</span>
         </div>
-        <span className="font-display text-[15px] font-semibold" style={{ color: 'var(--sidebar-text-active)' }}>OrgaBuddy</span>
+        <span className="text-[14px]" style={{ color: 'var(--sidebar-text-active)', fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 300, letterSpacing: '-0.01em' }}>OrgaBuddy</span>
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={handleSync}
@@ -204,8 +204,8 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
         {/* Projects header */}
-        <div className="flex items-center justify-between px-3 pt-1 pb-1.5">
-          <p className="text-[10px] uppercase tracking-widest font-medium" style={{ color: '#4a4540', letterSpacing: '0.1em' }}>Projetos</p>
+        <div className="flex items-center justify-between px-3 pt-3 pb-1.5">
+          <p className="label-caps">Projetos</p>
           <button
             onClick={() => { setAdding(''); setNewLabel('') }}
             style={{ color: '#4a4540' }}

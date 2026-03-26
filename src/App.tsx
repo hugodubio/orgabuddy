@@ -210,10 +210,25 @@ export default function App() {
       } pb-20 md:pb-6`}>
 
         {view === 'focus' && onlyUrgent && (
-          <div className="w-full">
-            <h1 className="text-[21px] md:text-[24px] mb-6" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
+          <div className={displayMode === 'list' ? 'max-w-2xl mx-auto w-full' : 'w-full'}>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
+              <div className="flex items-center gap-0.5 bg-[#f0f0ee] rounded-lg p-0.5">
+                {([
+                  { key: 'kanban', icon: <><rect x="1" y="1" width="3.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="5.25" y="1" width="3.5" height="8" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="9.5" y="1" width="3.5" height="10" rx="1" stroke="currentColor" strokeWidth="1.2"/></> },
+                  { key: 'list',   icon: <><line x1="1" y1="3" x2="13" y2="3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><line x1="1" y1="11" x2="13" y2="11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></> },
+                ] as const).map(({ key, icon }) => (
+                  <button key={key} onClick={() => setDisplayMode(key)}
+                    className={`p-1.5 rounded-md transition-colors ${displayMode === key ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#aaa] hover:text-[#666]'}`}>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">{icon}</svg>
+                  </button>
+                ))}
+              </div>
+            </div>
             {loading ? (
               <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
+            ) : displayMode === 'list' ? (
+              <TaskList tasks={visible} />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-start">
                 {([

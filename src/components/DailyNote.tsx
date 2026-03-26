@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useTasksStore } from '../store/tasks'
 import { useDayLogsStore } from '../store/daylogs'
 import { useProjectsStore } from '../store/projects'
+import { useAuthStore } from '../store/auth'
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -22,11 +23,12 @@ export default function DailyNote() {
   const { tasks } = useTasksStore()
   const { daylogs, fetchDayLogs, createDayLog } = useDayLogsStore()
   const { projects } = useProjectsStore()
+  const { userId } = useAuthStore()
 
   useEffect(() => {
-    supabase.from('notes').select('content').eq('date', date).single()
+    supabase.from('notes').select('content').eq('date', date).eq('user_id', userId ?? 'hugo').single()
       .then(({ data }) => setContent(data?.content ?? ''))
-  }, [date])
+  }, [date, userId])
 
   useEffect(() => {
     fetchDayLogs()
@@ -34,10 +36,10 @@ export default function DailyNote() {
 
   const save = useCallback(async (text: string) => {
     setSaving(true)
-    await supabase.from('notes').upsert({ date, content: text, updated_at: new Date().toISOString() })
+    await supabase.from('notes').upsert({ date, content: text, updated_at: new Date().toISOString(), user_id: userId ?? 'hugo' })
     setSaving(false)
     setLastSaved(new Date())
-  }, [date])
+  }, [date, userId])
 
   const onChange = (text: string) => {
     setContent(text)

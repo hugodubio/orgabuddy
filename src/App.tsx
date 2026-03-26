@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useTasksStore } from './store/tasks'
 import { useProjectsStore } from './store/projects'
+import { useAuthStore } from './store/auth'
+import Login from './components/Login'
 import ProjectSidebar from './components/ProjectSidebar'
 import CaptureBar from './components/CaptureBar'
 import TaskList from './components/TaskList'
@@ -131,8 +133,11 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
 }
 
 export default function App() {
+  const { userId } = useAuthStore()
   const { tasks, loading, activeProject, activeTag, onlyUrgent, view, displayMode, fetchTasks } = useTasksStore()
   const { fetchProjects } = useProjectsStore()
+
+  if (!userId) return <Login />
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)

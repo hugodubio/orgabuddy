@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import type { Task, Project, View } from '../types'
+import { useAuthStore } from './auth'
+
+const getUserId = () => useAuthStore.getState().userId ?? 'hugo'
 
 const PRIORITY_ORDER: Record<string, number> = { alta: 0, média: 1, baixa: 2 }
 
@@ -54,6 +57,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     const { data } = await supabase
       .from('ob_tasks')
       .select('*')
+      .eq('user_id', getUserId())
       .or(`done.eq.false,updated_at.gt.${yesterday}`)
 
     const sorted = (data ?? []).sort(
@@ -193,9 +197,10 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       }
 
       if (toUpsert.length > 0) {
+        const userId = getUserId()
         const { data: upserted, error } = await supabase
           .from('ob_tasks')
-          .upsert(toUpsert, { onConflict: 'source_id', ignoreDuplicates: false })
+          .upsert(toUpsert.map((t) => ({ ...t, user_id: userId })), { onConflict: 'source_id', ignoreDuplicates: false })
           .select()
 
         if (!error && upserted) {

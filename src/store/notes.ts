@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import type { ObNote } from '../types'
+import { useAuthStore } from './auth'
+
+const getUserId = () => useAuthStore.getState().userId ?? 'hugo'
 
 interface NotesState {
   notes: ObNote[]
@@ -20,6 +23,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     const { data } = await supabase
       .from('ob_notes')
       .select('*')
+      .eq('user_id', getUserId())
       .order('updated_at', { ascending: false })
     set({ notes: (data ?? []) as ObNote[] })
   },
@@ -27,7 +31,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   createNote: async () => {
     const { data } = await supabase
       .from('ob_notes')
-      .insert({ title: 'Sem título', content: '' })
+      .insert({ title: 'Sem título', content: '', user_id: getUserId() })
       .select()
       .single()
     if (data) {

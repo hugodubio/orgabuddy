@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useTasksStore } from '../store/tasks'
 import { useProjectsStore } from '../store/projects'
+import { useAuthStore } from '../store/auth'
 import type { ProjectDef } from '../types'
 
 function SyncIcon({ spinning }: { spinning: boolean }) {
@@ -35,7 +36,8 @@ export function useProjectColors() {
 }
 
 export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
-  const { tasks, syncing, activeProject, activeTag, onlyUrgent, view, setActiveProject, setActiveTag, setOnlyUrgent, setView, syncFromMystic } = useTasksStore()
+  const { tasks, syncing, activeProject, activeTag, onlyUrgent, view, setActiveProject, setActiveTag, setOnlyUrgent, setView, syncFromMystic, fetchTasks } = useTasksStore()
+  const { userName, logout } = useAuthStore()
   const { projects, fetchProjects, addProject, deleteProject, updateProject } = useProjectsStore()
   const [adding, setAdding] = useState<string | null>(null) // null = top-level, string = parentId
   const [newLabel, setNewLabel] = useState('')
@@ -436,6 +438,23 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
           )
         })()}
       </nav>
+
+      {/* User footer */}
+      <div className="px-4 py-3 flex items-center gap-2.5" style={{ borderTop: '1px solid var(--sidebar-border)' }}>
+        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0"
+          style={{ background: 'var(--amber)', fontFamily: 'Inter, sans-serif' }}>
+          {userName?.slice(0, 2).toUpperCase()}
+        </div>
+        <span className="text-[12px] flex-1 truncate" style={{ color: 'var(--sidebar-text-active)' }}>{userName}</span>
+        <button
+          onClick={() => { logout(); fetchTasks() }}
+          className="text-[11px] px-2 py-1 rounded transition-colors hover:bg-[#2a2520]"
+          style={{ color: 'var(--sidebar-text)' }}
+          title="Trocar utilizador"
+        >
+          ⇄
+        </button>
+      </div>
     </aside>
   )
 }

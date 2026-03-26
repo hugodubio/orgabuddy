@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useClassify } from '../hooks/useClassify'
 import { useTasksStore } from '../store/tasks'
+import { useAuthStore } from '../store/auth'
 import { supabase } from '../lib/supabase'
 
 type SpeechRecognitionInstance = {
@@ -30,6 +31,7 @@ export default function CaptureBar() {
   const baseTextRef = useRef('')
   const { classify, loading } = useClassify()
   const { addTask, fetchTasks, tasks } = useTasksStore()
+  const { userId } = useAuthStore()
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -85,6 +87,7 @@ export default function CaptureBar() {
           type: classified.type,
           tags: classified.tags ?? [],
           links: linkedIds,
+          user_id: userId ?? 'hugo',
         })
         .select()
         .single()

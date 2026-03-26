@@ -53,12 +53,13 @@ export const useTasksStore = create<TasksState>((set, get) => ({
 
   fetchTasks: async () => {
     set({ loading: true })
-    const yesterday = new Date(Date.now() - 86400000).toISOString()
+    const cutoff = new Date(Date.now() - 7 * 86400000).toISOString()
+    const userId = getUserId()
     const { data } = await supabase
       .from('ob_tasks')
       .select('*')
-      .eq('user_id', getUserId())
-      .or(`done.eq.false,updated_at.gt.${yesterday}`)
+      .eq('user_id', userId)
+      .or(`done.eq.false,updated_at.gte.${cutoff}`)
 
     const sorted = (data ?? []).sort(
       (a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2)
@@ -66,7 +67,11 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     set({ tasks: sorted as Task[], loading: false })
   },
 
-  addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
+  addTask: (task) => {
+    set((s) => ({ tasks: [task, ...s.tasks] }))
+    // Re-fetch after short delay to confirm persistence
+    setTimeout(() => get().fetchTasks(), 800)
+  },
 
   toggleDone: async (id) => {
     const task = get().tasks.find((t) => t.id === id)

@@ -45,6 +45,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const [editingProject, setEditingProject] = useState<string | null>(null)
   const [editLabel, setEditLabel] = useState('')
   const [editPalette, setEditPalette] = useState(0)
+  const [editKeywords, setEditKeywords] = useState('')
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
@@ -87,13 +88,15 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const startEdit = (p: ProjectDef) => {
     setEditingProject(p.id)
     setEditLabel(p.label)
+    setEditKeywords((p.keywords ?? []).join(', '))
     const idx = PALETTES.findIndex((pal) => pal.dot_color === p.dot_color)
     setEditPalette(idx >= 0 ? idx : 0)
   }
 
   const submitEdit = async () => {
     if (!editingProject || !editLabel.trim()) { setEditingProject(null); return }
-    await updateProject(editingProject, editLabel.trim(), PALETTES[editPalette])
+    const keywords = editKeywords.split(',').map((k) => k.trim().toLowerCase()).filter(Boolean)
+    await updateProject(editingProject, editLabel.trim(), PALETTES[editPalette], keywords)
     setEditingProject(null)
   }
 
@@ -319,6 +322,13 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                       if (e.key === 'Escape') setEditingProject(null)
                     }}
                     className="sidebar-input w-full rounded px-2 py-1.5 text-[13px] outline-none"
+                    style={{ background: '#2a2520', border: '1px solid #3a342e', color: 'var(--sidebar-text-active)' }}
+                  />
+                  <input
+                    value={editKeywords}
+                    onChange={(e) => setEditKeywords(e.target.value)}
+                    placeholder="palavras-chave, separadas por vírgula"
+                    className="sidebar-input w-full rounded px-2 py-1.5 text-[12px] outline-none"
                     style={{ background: '#2a2520', border: '1px solid #3a342e', color: 'var(--sidebar-text-active)' }}
                   />
                   <div className="flex gap-1.5">

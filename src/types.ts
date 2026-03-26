@@ -75,6 +75,7 @@ export interface ProjectDef {
   dot_color: string
   parent_id: string | null
   note: string | null
+  keywords: string[]
 }
 
 export interface Note {

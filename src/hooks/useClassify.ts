@@ -49,7 +49,12 @@ function classifyLocally(
   let detectedProjects = overrideProjects
   if (detectedProjects.length === 0) {
     for (const p of projects) {
-      if (lower.includes(p.label.toLowerCase()) || lower.includes(p.id.toLowerCase())) {
+      const terms = [
+        p.label.toLowerCase(),
+        p.id.toLowerCase(),
+        ...(p.keywords ?? []).map((k) => k.toLowerCase()),
+      ]
+      if (terms.some((t) => t && lower.includes(t))) {
         detectedProjects = [p.id]
         break
       }

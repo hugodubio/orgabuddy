@@ -7,7 +7,7 @@ interface ProjectsState {
   fetchProjects: () => Promise<void>
   addProject: (label: string, parentId?: string) => Promise<void>
   deleteProject: (id: string) => Promise<void>
-  updateProject: (id: string, label: string, palette: { color_bg: string; color_text: string; dot_color: string }) => Promise<void>
+  updateProject: (id: string, label: string, palette: { color_bg: string; color_text: string; dot_color: string }, keywords?: string[]) => Promise<void>
   updateProjectNote: (id: string, note: string) => Promise<void>
 }
 
@@ -40,10 +40,12 @@ export const useProjectsStore = create<ProjectsState>((set) => ({
     if (data) set((s) => ({ projects: [...s.projects, data as ProjectDef] }))
   },
 
-  updateProject: async (id, label, palette) => {
-    await supabase.from('projects').update({ label, ...palette }).eq('id', id)
+  updateProject: async (id, label, palette, keywords) => {
+    const payload: Record<string, unknown> = { label, ...palette }
+    if (keywords !== undefined) payload.keywords = keywords
+    await supabase.from('projects').update(payload).eq('id', id)
     set((s) => ({
-      projects: s.projects.map((p) => p.id === id ? { ...p, label, ...palette } : p),
+      projects: s.projects.map((p) => p.id === id ? { ...p, label, ...palette, ...(keywords !== undefined ? { keywords } : {}) } : p),
     }))
   },
 

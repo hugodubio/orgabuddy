@@ -163,15 +163,16 @@ export default function App() {
   const MYSTIC_SOURCES = ['mystic_event', 'mystic_task']
 
   const visible = tasks.filter((t) => {
-    if (MYSTIC_SOURCES.includes(t.source)) return false
-    if (onlyUrgent) return t.priority === 'alta' && !t.done
+    if (onlyUrgent) return !t.done
     if (activeTag) return (t.tags ?? []).includes(activeTag)
     if (activeProject) return t.projects.includes(activeProject)
+    // Foco do dia: esconde tarefas vindas do Mystic Fyah
+    if (MYSTIC_SOURCES.includes(t.source)) return false
     return true
   })
 
   const title = onlyUrgent
-    ? 'Urgentes'
+    ? 'A Fazer'
     : activeTag
     ? `#${activeTag}`
     : activeProject
@@ -203,10 +204,44 @@ export default function App() {
           : 'px-4 md:px-8 py-6 md:py-10'
       } pb-20 md:pb-6`}>
 
-        {view === 'focus' && (
+        {view === 'focus' && onlyUrgent && (
+          <div className="w-full">
+            <h1 className="text-[21px] md:text-[24px] mb-6" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
+            {loading ? (
+              <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-start">
+                {([
+                  { key: 'alta',  label: 'Urgente', color: '#c8402e', bg: '#fff0ee' },
+                  { key: 'média', label: 'Semana',  color: '#c07e1a', bg: '#fdf6e8' },
+                  { key: 'baixa', label: 'Depois',  color: '#7d909e', bg: '#f0f4f7' },
+                ] as const).map(({ key, label, color, bg }) => {
+                  const col = visible.filter((t) => t.priority === key)
+                  return (
+                    <div key={key} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                      <div className="px-3 py-2.5 flex items-center justify-between" style={{ background: bg, borderBottom: '1px solid var(--border)' }}>
+                        <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color, fontFamily: 'Inter, sans-serif' }}>{label}</span>
+                        <span className="text-[11px] font-mono" style={{ color }}>{col.length}</span>
+                      </div>
+                      <div className="py-1" style={{ background: 'var(--surface)' }}>
+                        {col.length === 0 ? (
+                          <p className="text-[12px] text-center py-6" style={{ color: 'var(--text-3)' }}>vazio</p>
+                        ) : (
+                          <TaskList tasks={col} />
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === 'focus' && !onlyUrgent && (
           <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 300, letterSpacing: '-0.02em' }}>{title}</h1>
+              <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
               <ViewToggle />
             </div>
 

@@ -28,6 +28,7 @@ interface TasksState {
   updateExternalLinks: (id: number, links: string[]) => Promise<void>
   updateTags: (id: number, tags: string[]) => Promise<void>
   updateTaskField: (id: number, fields: Partial<Pick<Task, 'text' | 'priority' | 'note' | 'type'>>) => Promise<void>
+  updateProjects: (id: number, projects: string[]) => Promise<void>
   syncFromMystic: () => Promise<{ added: number; updated: number }>
 }
 
@@ -115,6 +116,16 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, tags } : t)),
     }))
+  },
+
+  updateProjects: async (id, projects) => {
+    set((s) => ({
+      tasks: s.tasks.map((t) => (t.id === id ? { ...t, projects } : t)),
+    }))
+    await supabase
+      .from('ob_tasks')
+      .update({ projects, updated_at: new Date().toISOString() })
+      .eq('id', id)
   },
 
   updateTaskField: async (id, fields) => {

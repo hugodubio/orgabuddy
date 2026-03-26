@@ -3,12 +3,31 @@ import { useClassify } from '../hooks/useClassify'
 import { useTasksStore } from '../store/tasks'
 import { supabase } from '../lib/supabase'
 
+type SpeechRecognitionInstance = {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start: () => void
+  stop: () => void
+  onresult: ((e: { results: { [key: number]: { [key: number]: { transcript: string }; isFinal: boolean } }; resultIndex: number }) => void) | null
+  onend: (() => void) | null
+  onerror: ((e: { error: string }) => void) | null
+}
+
+const SpeechRecognitionAPI: (new () => SpeechRecognitionInstance) | null =
+  (typeof window !== 'undefined' &&
+    ((window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance }).SpeechRecognition ||
+     (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).webkitSpeechRecognition)) || null
+
 export default function CaptureBar() {
   const [input, setInput] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [linkQuery, setLinkQuery] = useState<string | null>(null)
   const [linkResults, setLinkResults] = useState<{ id: number; text: string }[]>([])
   const [linkStart, setLinkStart] = useState(0)
+  const [recording, setRecording] = useState(false)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+  const baseTextRef = useRef('')
   const { classify, loading } = useClassify()
   const { addTask, fetchTasks, tasks } = useTasksStore()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -84,6 +103,41 @@ export default function CaptureBar() {
     }
   }
 
+  const toggleVoice = () => {
+    if (recording) {
+      recognitionRef.current?.stop()
+      setRecording(false)
+      return
+    }
+    if (!SpeechRecognitionAPI) {
+      setError('Browser não suporta reconhecimento de voz')
+      return
+    }
+    const rec = new SpeechRecognitionAPI()
+    rec.continuous = true
+    rec.interimResults = true
+    rec.lang = 'pt-PT'
+    baseTextRef.current = input
+    rec.onresult = (e) => {
+      let interim = ''
+      let final = baseTextRef.current
+      for (let i = e.resultIndex; i < Object.keys(e.results).length; i++) {
+        const t = e.results[i][0].transcript
+        if (e.results[i].isFinal) { final += (final ? ' ' : '') + t; baseTextRef.current = final }
+        else interim = t
+      }
+      setInput(final + (interim ? (final ? ' ' : '') + interim : ''))
+    }
+    rec.onend = () => setRecording(false)
+    rec.onerror = (e) => {
+      if (e.error !== 'aborted') setError('Erro de microfone: ' + e.error)
+      setRecording(false)
+    }
+    recognitionRef.current = rec
+    rec.start()
+    setRecording(true)
+  }
+
   const hint = input
     ? loading ? 'a classificar…' : '↵ capturar · [[ para ligar'
     : null
@@ -101,16 +155,39 @@ export default function CaptureBar() {
           }}
           placeholder="o que tens na cabeça?"
           disabled={loading}
-          className="capture-input w-full rounded-lg px-4 py-3.5 text-[14px] outline-none transition-all pr-40 disabled:opacity-60"
+          className="capture-input w-full rounded-lg px-4 py-3.5 text-[14px] outline-none transition-all pr-20 disabled:opacity-60"
           style={{
-            background: error ? '#fdf0ee' : 'var(--surface)',
-            border: error ? '1.5px solid var(--red)' : '1.5px solid var(--border)',
+            background: error ? '#fdf0ee' : recording ? '#fdf6ee' : 'var(--surface)',
+            border: error ? '1.5px solid var(--red)' : recording ? '1.5px solid var(--amber)' : '1.5px solid var(--border)',
             color: 'var(--text-1)',
           }}
         />
-        {hint && (
-          <span className="absolute right-3 text-[11px] pointer-events-none" style={{ color: 'var(--text-3)' }}>{hint}</span>
-        )}
+        <div className="absolute right-3 flex items-center gap-2">
+          {hint && !recording && (
+            <span className="text-[11px] pointer-events-none" style={{ color: 'var(--text-3)' }}>{hint}</span>
+          )}
+          {SpeechRecognitionAPI && (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); toggleVoice() }}
+              className="flex items-center justify-center w-7 h-7 rounded-md transition-all"
+              style={recording
+                ? { background: 'var(--amber)', color: '#fff' }
+                : { color: 'var(--text-3)' }
+              }
+              title={recording ? 'Parar gravação' : 'Gravar voz'}
+            >
+              {recording ? (
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#fff' }} />
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
+                  <rect x="5" y="1" width="6" height="9" rx="3" stroke="currentColor" strokeWidth="1.3"/>
+                  <path d="M2.5 8.5A5.5 5.5 0 008 14a5.5 5.5 0 005.5-5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                  <line x1="8" y1="14" x2="8" y2="16" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <p className="mt-1.5 text-[12px] text-red-400 px-1">{error}</p>}

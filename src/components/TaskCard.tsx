@@ -21,7 +21,7 @@ export default function TaskCard({ task }: Props) {
   const [addingUrl, setAddingUrl] = useState(false)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { toggleDone, deleteTask, tasks, updateLinks, updateExternalLinks, updateTaskField } = useTasksStore()
+  const { toggleDone, deleteTask, tasks, updateLinks, updateExternalLinks, updateTaskField, updateProjects } = useTasksStore()
   const { projects } = useProjectsStore()
 
   const linkedTasks = tasks.filter((t) => task.links.includes(t.id))
@@ -190,7 +190,7 @@ export default function TaskCard({ task }: Props) {
             )}
           </div>
 
-          {/* Priority + Type selectors */}
+          {/* Priority + Type + Projects selectors */}
           <div className="px-4 py-3 flex flex-wrap gap-4" style={{ borderBottom: '1px solid var(--border-soft)' }}>
             {/* Priority */}
             <div>
@@ -229,6 +229,33 @@ export default function TaskCard({ task }: Props) {
                     {t === 'tarefa' ? '✓ Tarefa' : '💡 Ideia'}
                   </button>
                 ))}
+              </div>
+            </div>
+            {/* Projects */}
+            <div>
+              <p className="label-caps mb-1.5">Projecto</p>
+              <div className="flex flex-wrap gap-1">
+                {projects.filter((p) => !p.parent_id).map((p) => {
+                  const active = task.projects.includes(p.id)
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        const next = active
+                          ? task.projects.filter((id) => id !== p.id)
+                          : [...task.projects, p.id]
+                        updateProjects(task.id, next)
+                      }}
+                      className="text-[11px] px-2 py-1 rounded-md font-medium transition-all"
+                      style={active
+                        ? { background: p.color_bg, color: p.color_text, outline: `1.5px solid ${p.dot_color}` }
+                        : { background: 'var(--bg)', color: 'var(--text-3)', opacity: 0.6 }
+                      }
+                    >
+                      {p.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>

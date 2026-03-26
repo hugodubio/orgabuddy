@@ -36,10 +36,13 @@ export function useProjectColors() {
 
 export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const { tasks, syncing, activeProject, activeTag, onlyUrgent, view, setActiveProject, setActiveTag, setOnlyUrgent, setView, syncFromMystic } = useTasksStore()
-  const { projects, fetchProjects, addProject, deleteProject } = useProjectsStore()
+  const { projects, fetchProjects, addProject, deleteProject, updateProject } = useProjectsStore()
   const [adding, setAdding] = useState<string | null>(null) // null = top-level, string = parentId
   const [newLabel, setNewLabel] = useState('')
   const [hoveredProject, setHoveredProject] = useState<string | null>(null)
+  const [editingProject, setEditingProject] = useState<string | null>(null)
+  const [editLabel, setEditLabel] = useState('')
+  const [editPalette, setEditPalette] = useState(0)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
@@ -69,6 +72,29 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const countFor = (id: string) => pendingByProject[id] ?? 0
   const totalPending = tasks.filter((t) => !t.done).length
 
+  const PALETTES = [
+    { color_bg: '#fef9c3', color_text: '#854d0e', dot_color: '#eab308' },
+    { color_bg: '#dcfce7', color_text: '#166534', dot_color: '#22c55e' },
+    { color_bg: '#fee2e2', color_text: '#991b1b', dot_color: '#ef4444' },
+    { color_bg: '#e0f2fe', color_text: '#075985', dot_color: '#0ea5e9' },
+    { color_bg: '#f3e8ff', color_text: '#6b21a8', dot_color: '#a855f7' },
+    { color_bg: '#fff7ed', color_text: '#9a3412', dot_color: '#f97316' },
+    { color_bg: '#f0fdf4', color_text: '#14532d', dot_color: '#16a34a' },
+  ]
+
+  const startEdit = (p: ProjectDef) => {
+    setEditingProject(p.id)
+    setEditLabel(p.label)
+    const idx = PALETTES.findIndex((pal) => pal.dot_color === p.dot_color)
+    setEditPalette(idx >= 0 ? idx : 0)
+  }
+
+  const submitEdit = async () => {
+    if (!editingProject || !editLabel.trim()) { setEditingProject(null); return }
+    await updateProject(editingProject, editLabel.trim(), PALETTES[editPalette])
+    setEditingProject(null)
+  }
+
   const submitNew = async () => {
     const label = newLabel.trim()
     if (!label) return
@@ -92,7 +118,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         <div className="w-5 h-5 flex items-center justify-center shrink-0" style={{ background: 'var(--amber)', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
           <span className="text-white text-[9px] font-bold" style={{ fontFamily: 'Syne, sans-serif' }}>O</span>
         </div>
-        <span className="text-[14px]" style={{ color: 'var(--sidebar-text-active)', fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 300, letterSpacing: '-0.01em' }}>OrgaBuddy</span>
+        <span className="text-[13px]" style={{ color: 'var(--sidebar-text-active)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.02em' }}>OrgaBuddy</span>
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={handleSync}
@@ -137,8 +163,14 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
           onClick={() => { setActiveProject(null); setOnlyUrgent(true); setView('focus') }}
           className={navBtn(view === 'focus' && onlyUrgent)}
         >
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--red)' }} />
-          <span>Urgentes</span>
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
+            <rect x="1.5" y="1.5" width="4.5" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+            <rect x="8" y="1.5" width="4.5" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+          </svg>
+          <span>A Fazer</span>
+          {tasks.filter((t) => !t.done).length > 0 && (
+            <span className="ml-auto text-[11px]" style={{ color: '#5a5248' }}>{tasks.filter((t) => !t.done).length}</span>
+          )}
         </button>
 
         <button
@@ -257,6 +289,12 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                     )}
                     {hoveredProject === p.id && (
                       <>
+                        <button onClick={(e) => { e.stopPropagation(); startEdit(p) }}
+                          className="opacity-50 hover:opacity-100" title="Editar">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                            <path d="M8.5 1.5l2 2-6 6H2.5v-2l6-6z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); setAdding(p.id); setNewLabel('') }}
                           className="opacity-50 hover:opacity-100 leading-none text-[15px]">+</button>
                         <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id) }}
@@ -266,6 +304,46 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                   </div>
                 </button>
               </div>
+
+              {/* Inline edit */}
+              {editingProject === p.id && (
+                <div className="mx-2 mb-2 p-2.5 rounded-lg space-y-2" style={{ background: '#1a1713', border: '1px solid #2a2520' }}>
+                  <input
+                    autoFocus
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') submitEdit()
+                      if (e.key === 'Escape') setEditingProject(null)
+                    }}
+                    className="sidebar-input w-full rounded px-2 py-1.5 text-[13px] outline-none"
+                    style={{ background: '#2a2520', border: '1px solid #3a342e', color: 'var(--sidebar-text-active)' }}
+                  />
+                  <div className="flex gap-1.5">
+                    {PALETTES.map((pal, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setEditPalette(i)}
+                        className="w-4 h-4 rounded-full transition-transform"
+                        style={{
+                          background: pal.dot_color,
+                          outline: editPalette === i ? `2px solid ${pal.dot_color}` : 'none',
+                          outlineOffset: '2px',
+                          transform: editPalette === i ? 'scale(1.2)' : 'scale(1)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button onClick={submitEdit}
+                      className="text-[11px] px-2 py-1 rounded font-medium"
+                      style={{ background: 'var(--amber)', color: '#fff' }}>guardar</button>
+                    <button onClick={() => setEditingProject(null)}
+                      className="text-[11px] px-2 py-1 rounded"
+                      style={{ color: 'var(--sidebar-text)' }}>cancelar</button>
+                  </div>
+                </div>
+              )}
 
               {/* Sub-projects */}
               {isOpen && children.map((child) => (

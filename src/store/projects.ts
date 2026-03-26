@@ -7,6 +7,7 @@ interface ProjectsState {
   fetchProjects: () => Promise<void>
   addProject: (label: string, parentId?: string) => Promise<void>
   deleteProject: (id: string) => Promise<void>
+  updateProject: (id: string, label: string, palette: { color_bg: string; color_text: string; dot_color: string }) => Promise<void>
   updateProjectNote: (id: string, note: string) => Promise<void>
 }
 
@@ -37,6 +38,13 @@ export const useProjectsStore = create<ProjectsState>((set) => ({
       .select()
       .single()
     if (data) set((s) => ({ projects: [...s.projects, data as ProjectDef] }))
+  },
+
+  updateProject: async (id, label, palette) => {
+    await supabase.from('projects').update({ label, ...palette }).eq('id', id)
+    set((s) => ({
+      projects: s.projects.map((p) => p.id === id ? { ...p, label, ...palette } : p),
+    }))
   },
 
   deleteProject: async (id: string) => {

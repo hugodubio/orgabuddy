@@ -445,15 +445,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
           style={{ background: 'var(--amber)', fontFamily: 'Inter, sans-serif' }}>
           {userName?.slice(0, 2).toUpperCase()}
         </div>
-        <span className="text-[12px] flex-1 truncate" style={{ color: 'var(--sidebar-text-active)' }}>{userName}</span>
-        <button
-          onClick={() => { logout(); fetchTasks() }}
-          className="text-[11px] px-2 py-1 rounded transition-colors hover:bg-[#2a2520]"
-          style={{ color: 'var(--sidebar-text)' }}
-          title="Trocar utilizador"
-        >
-          ⇄
-        </button>
+        <span className="text-[12px]" style={{ color: 'var(--sidebar-text-active)' }}>{userName}</span>
       </div>
     </aside>
   )

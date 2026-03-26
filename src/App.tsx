@@ -136,8 +136,6 @@ export default function App() {
   const { userId } = useAuthStore()
   const { tasks, loading, activeProject, activeTag, onlyUrgent, view, displayMode, fetchTasks } = useTasksStore()
   const { fetchProjects } = useProjectsStore()
-
-  if (!userId) return <Login />
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)
@@ -165,9 +163,14 @@ export default function App() {
     }, 50)
   }, [])
 
+  if (!userId) return <Login />
+
   const MYSTIC_SOURCES = ['mystic_event', 'mystic_task']
 
-  const visible = tasks.filter((t) => {
+  // Filter by user (null user_id = legacy Hugo tasks)
+  const userTasks = tasks.filter((t) => !t.user_id || t.user_id === userId)
+
+  const visible = userTasks.filter((t) => {
     if (onlyUrgent) return !t.done
     if (activeTag) return (t.tags ?? []).includes(activeTag)
     if (activeProject) return t.projects.includes(activeProject)

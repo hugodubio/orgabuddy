@@ -54,11 +54,9 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   fetchTasks: async () => {
     set({ loading: true })
     const cutoff = new Date(Date.now() - 7 * 86400000).toISOString()
-    const userId = getUserId()
     const { data } = await supabase
       .from('ob_tasks')
       .select('*')
-      .eq('user_id', userId)
       .or(`done.eq.false,updated_at.gte.${cutoff}`)
 
     const sorted = (data ?? []).sort(

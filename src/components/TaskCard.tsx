@@ -124,6 +124,23 @@ export default function TaskCard({ task }: Props) {
               </span>
             ))}
 
+            {task.due_date && (() => {
+              const today = new Date().toISOString().split('T')[0]
+              const isOverdue = task.due_date < today
+              const isToday = task.due_date === today
+              if (isOverdue) return (
+                <span className="text-[10px] px-1.5 py-[3px] rounded-[3px] font-medium" style={{ background: '#fee2e2', color: '#dc2626' }}>Atrasada</span>
+              )
+              if (isToday) return (
+                <span className="text-[10px] px-1.5 py-[3px] rounded-[3px] font-medium" style={{ background: 'var(--amber-bg)', color: 'var(--amber)' }}>Hoje</span>
+              )
+              return (
+                <span className="text-[10px] px-1.5 py-[3px] rounded-[3px]" style={{ background: 'var(--bg)', color: 'var(--text-3)' }}>
+                  {new Date(task.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                </span>
+              )
+            })()}
+
             {task.note && (
               <span className="text-[10px] px-1 py-0.5 rounded-[3px]" style={{ color: 'var(--text-3)' }}>📝</span>
             )}
@@ -187,6 +204,22 @@ export default function TaskCard({ task }: Props) {
               >
                 {task.text}
               </p>
+            )}
+          </div>
+
+          {/* Due date */}
+          <div className="px-4 py-2.5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--border-soft)' }}>
+            <p className="label-caps shrink-0">Data limite</p>
+            <input
+              type="date"
+              defaultValue={task.due_date ?? ''}
+              onChange={(e) => updateTaskField(task.id, { due_date: e.target.value || null })}
+              className="text-[12px] rounded px-2 py-1 outline-none"
+              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
+            />
+            {task.due_date && (
+              <button onClick={() => updateTaskField(task.id, { due_date: null })}
+                className="text-[11px]" style={{ color: 'var(--text-3)' }}>limpar</button>
             )}
           </div>
 

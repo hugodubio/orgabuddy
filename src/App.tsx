@@ -63,40 +63,40 @@ function ViewToggle() {
 
 // Bottom nav for mobile
 function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
-  const { view, setView, setActiveProject, setOnlyUrgent } = useTasksStore()
+  const { view, setView, setActiveProject, setOnlyUrgent, onlyUrgent, tasks } = useTasksStore()
+  const { userId } = useAuthStore()
+
+  const urgentCount = tasks.filter(
+    (t) => !t.done && t.priority === 'alta' && (t.user_id === userId || (!t.user_id && userId === 'hugo'))
+  ).length
+
   const items = [
-    { v: 'focus' as const, label: 'Foco', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+    { v: 'focus' as const, label: 'Foco', active: view === 'focus' && !onlyUrgent, icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
         <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
         <circle cx="7" cy="7" r="2" fill="currentColor"/>
       </svg>
     )},
-    { v: 'calendar' as const, label: 'Cal.', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
-        <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
-        <line x1="1.5" y1="6" x2="12.5" y2="6" stroke="currentColor" strokeWidth="1"/>
-        <line x1="4.5" y1="1" x2="4.5" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-        <line x1="9.5" y1="1" x2="9.5" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    { v: 'afazer' as const, label: 'A Fazer', active: onlyUrgent, badge: urgentCount, icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
+        <path d="M2 3h10M2 7h7M2 11h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="11.5" cy="10.5" r="2" stroke="currentColor" strokeWidth="1.1"/>
+        <line x1="11.5" y1="9.5" x2="11.5" y2="10.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+        <circle cx="11.5" cy="10.5" r="0.4" fill="currentColor"/>
       </svg>
     )},
-    { v: 'notes' as const, label: 'Notas', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+    { v: 'notes' as const, label: 'Notas', active: view === 'notes', icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
         <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
         <line x1="4" y1="5" x2="10" y2="5" stroke="currentColor" strokeWidth="1"/>
         <line x1="4" y1="7.5" x2="10" y2="7.5" stroke="currentColor" strokeWidth="1"/>
         <line x1="4" y1="10" x2="7" y2="10" stroke="currentColor" strokeWidth="1"/>
       </svg>
     )},
-    { v: 'note' as const, label: 'Diário', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+    { v: 'note' as const, label: 'Diário', active: view === 'note', icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
         <path d="M3 2h6l3 3v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.3"/>
         <path d="M9 2v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
-      </svg>
-    )},
-    { v: 'search' as const, label: 'Busca', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
-        <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-        <line x1="9" y1="9" x2="13" y2="13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
       </svg>
     )},
   ]
@@ -104,24 +104,35 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 md:hidden z-30 flex items-center border-t"
       style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      {items.map(({ v, label, icon }) => (
+      {items.map(({ v, label, icon, active, badge }) => (
         <button
           key={v}
-          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView(v) }}
-          className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] transition-colors"
-          style={{ color: view === v ? 'var(--amber)' : 'var(--sidebar-text)' }}
+          onClick={() => {
+            if (v === 'afazer') { setActiveProject(null); setOnlyUrgent(true); setView('focus') }
+            else { setActiveProject(null); setOnlyUrgent(false); setView(v as 'focus' | 'notes' | 'note') }
+          }}
+          className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors relative"
+          style={{ color: active ? 'var(--amber)' : 'var(--sidebar-text)' }}
         >
-          {icon}
+          <span className="relative">
+            {icon}
+            {badge ? (
+              <span className="absolute -top-1 -right-1.5 text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full"
+                style={{ background: 'var(--amber)', color: '#fff' }}>
+                {badge > 9 ? '9+' : badge}
+              </span>
+            ) : null}
+          </span>
           {label}
         </button>
       ))}
-      {/* Menu button */}
+      {/* Menu */}
       <button
         onClick={onMenuOpen}
-        className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] transition-colors"
+        className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors"
         style={{ color: 'var(--sidebar-text)' }}
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 14 14">
+        <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
           <line x1="1" y1="3.5" x2="13" y2="3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
           <line x1="1" y1="7" x2="10" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
           <line x1="1" y1="10.5" x2="7" y2="10.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
@@ -141,6 +152,35 @@ export default function App() {
   const captureRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => { fetchTasks(); fetchProjects() }, [fetchTasks, fetchProjects])
+
+  // Request notification permission on first load
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
+
+  // Fire notification for urgent/overdue tasks (once per session)
+  useEffect(() => {
+    if (loading) return
+    if (!('Notification' in window) || Notification.permission !== 'granted') return
+    if (sessionStorage.getItem('ob_notified')) return
+
+    const today = new Date().toISOString().split('T')[0]
+    const userTasks = tasks.filter((t) => t.user_id === userId || (!t.user_id && userId === 'hugo'))
+    const urgent = userTasks.filter((t) => !t.done && (
+      t.priority === 'alta' ||
+      (t.due_date && t.due_date <= today)
+    ))
+
+    if (urgent.length > 0) {
+      sessionStorage.setItem('ob_notified', '1')
+      new Notification('OrgaBuddy', {
+        body: `${urgent.length} tarefa${urgent.length > 1 ? 's' : ''} urgente${urgent.length > 1 ? 's' : ''} hoje`,
+        icon: 'https://hugodubio.github.io/orgabuddy/favicon.ico',
+      })
+    }
+  }, [loading, tasks, userId])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useClassify } from '../hooks/useClassify'
 import { useTasksStore } from '../store/tasks'
+import { useNotesStore } from '../store/notes'
 import { useAuthStore } from '../store/auth'
 import { supabase } from '../lib/supabase'
 
@@ -27,10 +28,12 @@ export default function CaptureBar() {
   const [linkResults, setLinkResults] = useState<{ id: number; text: string }[]>([])
   const [linkStart, setLinkStart] = useState(0)
   const [recording, setRecording] = useState(false)
+  const [mode, setMode] = useState<'task' | 'note'>('task')
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const baseTextRef = useRef('')
   const { classify, loading } = useClassify()
   const { addTask, fetchTasks, tasks } = useTasksStore()
+  const { createNote, updateNote, fetchNotes } = useNotesStore()
   const { userId } = useAuthStore()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -55,10 +58,27 @@ export default function CaptureBar() {
     inputRef.current?.focus()
   }
 
+  const submitNote = async (text: string) => {
+    const note = await createNote()
+    if (!note) { setError('Erro ao criar nota'); setInput(text); return }
+    const title = text.slice(0, 60)
+    const content = text.length > 60 ? text : ''
+    await updateNote(note.id, title, content)
+    await fetchNotes()
+    setInput('')
+    setError(null)
+  }
+
   const submit = async () => {
     const text = input.trim()
     if (!text || loading) return
     setError(null)
+
+    if (mode === 'note') {
+      setInput('')
+      await submitNote(text)
+      return
+    }
 
     const linkedIds: number[] = []
     const cleaned = text.replace(/\[\[([^\]]+)\]\]/g, (_, ref) => {
@@ -144,11 +164,28 @@ export default function CaptureBar() {
   }
 
   const hint = input
-    ? loading ? 'a classificar…' : '↵ capturar · [[ para ligar'
+    ? loading ? 'a classificar…' : mode === 'note' ? '↵ guardar nota' : '↵ capturar · [[ para ligar'
     : null
 
   return (
     <div className="relative">
+      {/* Mode toggle */}
+      <div className="flex gap-1 mb-2">
+        <button
+          onClick={() => setMode('task')}
+          className="text-[11px] px-2.5 py-1 rounded-md font-medium transition-all"
+          style={mode === 'task'
+            ? { background: 'var(--text-1)', color: '#fff' }
+            : { background: 'var(--surface)', color: 'var(--text-3)', border: '1px solid var(--border)' }}
+        >✓ Tarefa</button>
+        <button
+          onClick={() => setMode('note')}
+          className="text-[11px] px-2.5 py-1 rounded-md font-medium transition-all"
+          style={mode === 'note'
+            ? { background: 'var(--text-1)', color: '#fff' }
+            : { background: 'var(--surface)', color: 'var(--text-3)', border: '1px solid var(--border)' }}
+        >📝 Nota</button>
+      </div>
       <div className="relative flex items-center">
         <input
           ref={inputRef}
@@ -158,12 +195,12 @@ export default function CaptureBar() {
             if (e.key === 'Enter' && !linkQuery) submit()
             if (e.key === 'Escape') setLinkQuery(null)
           }}
-          placeholder="o que tens na cabeça?"
+          placeholder={mode === 'note' ? 'escreve a nota…' : 'o que tens na cabeça?'}
           disabled={loading}
           className="capture-input w-full rounded-lg px-4 py-3.5 text-[14px] outline-none transition-all pr-20 disabled:opacity-60"
           style={{
-            background: error ? '#fdf0ee' : recording ? '#fdf6ee' : 'var(--surface)',
-            border: error ? '1.5px solid var(--red)' : recording ? '1.5px solid var(--amber)' : '1.5px solid var(--border)',
+            background: error ? '#fdf0ee' : recording ? '#fdf6ee' : mode === 'note' ? 'var(--surface)' : 'var(--surface)',
+            border: error ? '1.5px solid var(--red)' : recording ? '1.5px solid var(--amber)' : mode === 'note' ? '1.5px solid var(--border-soft)' : '1.5px solid var(--border)',
             color: 'var(--text-1)',
           }}
         />

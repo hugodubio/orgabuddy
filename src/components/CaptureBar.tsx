@@ -87,6 +87,8 @@ export default function CaptureBar() {
           type: classified.type,
           tags: classified.tags ?? [],
           links: linkedIds,
+          source: 'manual',
+          done: false,
           user_id: userId ?? 'hugo',
         })
         .select()

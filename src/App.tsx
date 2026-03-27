@@ -167,8 +167,8 @@ export default function App() {
 
   const MYSTIC_SOURCES = ['mystic_event', 'mystic_task']
 
-  // Filter by user (null user_id = legacy Hugo tasks)
-  const userTasks = tasks.filter((t) => !t.user_id || t.user_id === userId)
+  // Filter by user — legacy tasks (null user_id) only visible to hugo
+  const userTasks = tasks.filter((t) => t.user_id === userId || (!t.user_id && userId === 'hugo'))
 
   const visible = userTasks.filter((t) => {
     if (onlyUrgent) return !t.done

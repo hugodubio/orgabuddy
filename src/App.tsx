@@ -210,12 +210,17 @@ export default function App() {
   // Filter by user — legacy tasks (null user_id) only visible to hugo
   const userTasks = tasks.filter((t) => t.user_id === userId || (!t.user_id && userId === 'hugo'))
 
+  const today = new Date().toISOString().split('T')[0]
+
   const visible = userTasks.filter((t) => {
-    if (onlyUrgent) return !t.done
-    if (activeTag) return (t.tags ?? []).includes(activeTag)
+    // Dentro de um projecto: mostra tudo
     if (activeProject) return t.projects.includes(activeProject)
-    // Foco do dia: esconde tarefas vindas do Mystic Fyah
-    if (MYSTIC_SOURCES.includes(t.source)) return false
+    if (activeTag) return (t.tags ?? []).includes(activeTag)
+    // Eventos do Mystic: só aparecem se forem hoje
+    if (t.source === 'mystic_event') return t.due_date === today
+    if (onlyUrgent) return !t.done
+    // Foco do dia: esconde tarefas do Mystic (não-eventos)
+    if (t.source === 'mystic_task') return false
     return true
   })
 

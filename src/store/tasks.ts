@@ -177,6 +177,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
           source: 'mystic_event',
           source_id: `mf_event_${ev.id}`,
           done: ev.estado === 'Cancelado',
+          due_date: ev.data ?? null,
           links: [],
           updated_at: new Date().toISOString(),
         })

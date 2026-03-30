@@ -2,10 +2,11 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin'
 
 export interface Task {
   id: number
+  user_id: string
   text: string
   projects: Project[]
   priority: Priority

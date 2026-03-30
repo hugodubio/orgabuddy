@@ -37,7 +37,7 @@ export function useProjectColors() {
 
 export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const { tasks, syncing, activeProject, activeTag, onlyUrgent, view, setActiveProject, setActiveTag, setOnlyUrgent, setView, syncFromMystic, fetchTasks } = useTasksStore()
-  const { userName, logout } = useAuthStore()
+  const { userName, isAdmin, logout } = useAuthStore()
   const { projects, fetchProjects, addProject, deleteProject, updateProject } = useProjectsStore()
   const [adding, setAdding] = useState<string | null>(null) // null = top-level, string = parentId
   const [newLabel, setNewLabel] = useState('')
@@ -455,7 +455,24 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
           style={{ background: 'var(--amber)', fontFamily: 'Inter, sans-serif' }}>
           {userName?.slice(0, 2).toUpperCase()}
         </div>
-        <span className="text-[12px]" style={{ color: 'var(--sidebar-text-active)' }}>{userName}</span>
+        <span className="flex-1 text-[12px]" style={{ color: 'var(--sidebar-text-active)' }}>{userName}</span>
+        {isAdmin && (
+          <button
+            onClick={() => { setView('admin'); onClose?.() }}
+            className="text-[10px] px-2 py-1 rounded-md transition-opacity opacity-60 hover:opacity-100"
+            style={{ color: 'var(--sidebar-text)', border: '1px solid var(--sidebar-border)' }}
+            title="Utilizadores"
+          >
+            ⚙
+          </button>
+        )}
+        <button
+          onClick={logout}
+          className="text-[10px] px-2 py-1 rounded-md transition-opacity opacity-60 hover:opacity-100"
+          style={{ color: 'var(--sidebar-text)', border: '1px solid var(--sidebar-border)' }}
+        >
+          Sair
+        </button>
       </div>
     </aside>
   )

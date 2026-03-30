@@ -40,7 +40,7 @@ export default function CommandPalette({ onClose, onFocusCapture }: Props) {
 
   const items: Item[] = query.length >= 2
     ? [
-        ...navActions.filter((a) => a.label.toLowerCase().includes(query.toLowerCase())),
+        ...navActions.filter((a) => a.kind === 'action' && a.label.toLowerCase().includes(query.toLowerCase())),
         ...tasks
           .filter((t) => !t.done && t.text.toLowerCase().includes(query.toLowerCase()))
           .slice(0, 5)

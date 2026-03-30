@@ -155,7 +155,7 @@ export default function KanbanView({ tasks }: Props) {
               }`}
               style={{
                 background: bg,
-                ringColor: isOver ? color : undefined,
+                outlineColor: isOver ? color : undefined,
               }}
             >
               {col.map((task) => (

@@ -21,7 +21,7 @@ const IDEIA_WORDS = [
 
 function classifyLocally(
   text: string,
-  projects: { id: string; label: string }[],
+  projects: { id: string; label: string; keywords?: string[] }[],
   overrideProjects: string[],
   overridePriority?: Priority
 ): ClassifyResult {

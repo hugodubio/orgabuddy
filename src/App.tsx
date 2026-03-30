@@ -15,6 +15,7 @@ import ProjectNote from './components/ProjectNote'
 import FreeNotes from './components/FreeNotes'
 import CommandPalette from './components/CommandPalette'
 import SearchView from './components/SearchView'
+import AdminPanel from './components/AdminPanel'
 
 function ViewToggle() {
   const { displayMode, setDisplayMode } = useTasksStore()
@@ -145,7 +146,7 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
 
 export default function App() {
   const { userId } = useAuthStore()
-  const { tasks, loading, activeProject, activeTag, onlyUrgent, view, displayMode, fetchTasks } = useTasksStore()
+  const { tasks, loading, activeProject, activeTag, onlyUrgent, view, displayMode, setDisplayMode, fetchTasks } = useTasksStore()
   const { fetchProjects } = useProjectsStore()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -363,6 +364,12 @@ export default function App() {
         {view === 'search' && (
           <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full">
             <SearchView />
+          </div>
+        )}
+
+        {view === 'admin' && (
+          <div className="flex-1 flex flex-col max-w-lg mx-auto w-full">
+            <AdminPanel />
           </div>
         )}
       </main>

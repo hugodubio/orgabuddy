@@ -2,7 +2,18 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin' | 'time'
+
+export interface TimeEntry {
+  id: number
+  user_id: string
+  project_id: string | null
+  description: string | null
+  started_at: string
+  ended_at: string
+  duration_minutes: number
+  created_at: string
+}
 
 export interface Task {
   id: number

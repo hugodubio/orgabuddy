@@ -16,6 +16,7 @@ import FreeNotes from './components/FreeNotes'
 import CommandPalette from './components/CommandPalette'
 import SearchView from './components/SearchView'
 import AdminPanel from './components/AdminPanel'
+import TimeView from './components/TimeView'
 
 function ViewToggle() {
   const { displayMode, setDisplayMode } = useTasksStore()
@@ -370,6 +371,12 @@ export default function App() {
         {view === 'admin' && (
           <div className="flex-1 flex flex-col max-w-lg mx-auto w-full">
             <AdminPanel />
+          </div>
+        )}
+
+        {view === 'time' && (
+          <div className="flex-1 flex flex-col px-4 py-6">
+            <TimeView />
           </div>
         )}
       </main>

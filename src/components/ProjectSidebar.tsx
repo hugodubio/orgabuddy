@@ -192,6 +192,18 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
 <button
+          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('time') }}
+          className={navBtn(view === 'time')}
+        >
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
+            <line x1="7" y1="4" x2="7" y2="7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <line x1="7" y1="7.5" x2="9.5" y2="9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          <span>Horas</span>
+        </button>
+
+        <button
           onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('notes') }}
           className={navBtn(view === 'notes')}
         >

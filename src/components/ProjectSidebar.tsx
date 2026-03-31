@@ -120,10 +120,14 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
     <aside className="w-[228px] shrink-0 h-screen sticky top-0 flex flex-col" style={{ background: 'var(--sidebar-bg)' }}>
       {/* Logo */}
       <div className="px-4 pt-5 pb-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
-        <div className="w-5 h-5 flex items-center justify-center shrink-0" style={{ background: 'var(--amber)', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-          <span className="text-white text-[9px] font-bold" style={{ fontFamily: 'Syne, sans-serif' }}>O</span>
-        </div>
-        <span className="text-[13px]" style={{ color: 'var(--sidebar-text-active)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.02em' }}>OrgaBuddy</span>
+        <svg width="20" height="22" viewBox="0 0 20 22" fill="none" className="shrink-0">
+          <path d="M10 1L2 4v7c0 5 3.5 8.5 8 10V1z" fill="#2C3E50"/>
+          <path d="M10 1l8 3v7c0 5-3.5 8.5-8 10V1z" fill="#1ABC9C"/>
+          <circle cx="7.5" cy="9.5" r="1.1" fill="#F1C40F"/>
+          <circle cx="12.5" cy="9.5" r="1.1" fill="#F1C40F"/>
+          <path d="M7.2 12.5 Q10 14.8 12.8 12.5" stroke="white" strokeWidth="1.1" strokeLinecap="round" fill="none"/>
+        </svg>
+        <span className="text-[13px]" style={{ color: 'var(--sidebar-text-active)', fontFamily: 'Lexend, Inter, sans-serif', fontWeight: 700, letterSpacing: '-0.01em' }}>OrgaBuddy</span>
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={handleSync}
@@ -134,7 +138,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
           >
             <SyncIcon spinning={syncing} />
           </button>
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono hidden md:inline" style={{ color: '#5a5248', background: '#2a2520', letterSpacing: '0.05em' }}>⌘K</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono hidden md:inline" style={{ color: 'var(--sidebar-text)', background: 'rgba(255,255,255,0.07)', letterSpacing: '0.05em' }}>⌘K</span>
           {onClose && (
             <button onClick={onClose} className="md:hidden text-lg leading-none" style={{ color: 'var(--sidebar-text)' }}>×</button>
           )}

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNotesStore } from '../store/notes'
 import { useProjectsStore } from '../store/projects'
 import type { ProjectDef } from '../types'
+import Attachments from './Attachments'
 
 function detectProjects(text: string, allProjects: ProjectDef[]): string[] {
   const lower = text.toLowerCase()
@@ -11,7 +12,7 @@ function detectProjects(text: string, allProjects: ProjectDef[]): string[] {
 }
 
 export default function FreeNotes() {
-  const { notes, selectedId, fetchNotes, createNote, updateNote, deleteNote, selectNote } = useNotesStore()
+  const { notes, selectedId, fetchNotes, createNote, updateNote, deleteNote, selectNote, updateNoteAttachments } = useNotesStore()
   const { projects } = useProjectsStore()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -169,9 +170,19 @@ export default function FreeNotes() {
               onChange={(e) => onChangeContent(e.target.value)}
               placeholder={`Escreve aqui…\n\nPodes usar markdown, adicionar links, contexto.\nUsa @projeto ou o nome do projeto para associar.`}
               className="flex-1 resize-none outline-none text-[13.5px] text-[#1a1a1a] leading-relaxed placeholder:text-[#ccc] bg-transparent font-sans"
-              style={{ minHeight: 400 }}
+              style={{ minHeight: 300 }}
               spellCheck
             />
+
+            {selected && (
+              <div className="mt-4 pt-4 border-t border-[#ebebea]">
+                <Attachments
+                  attachments={selected.attachments ?? []}
+                  onUpdate={(a) => updateNoteAttachments(selected.id, a)}
+                  context={`note-${selected.id}`}
+                />
+              </div>
+            )}
           </>
         )}
       </div>

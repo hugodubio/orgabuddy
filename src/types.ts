@@ -19,6 +19,7 @@ export interface Task {
   id: number
   user_id: string
   text: string
+  attachments: Attachment[]
   projects: Project[]
   priority: Priority
   reason: string | null
@@ -62,11 +63,19 @@ export interface HabitLog {
   done: boolean
 }
 
+export interface Attachment {
+  name: string
+  url: string
+  size: number
+  mime: string
+}
+
 export interface ObNote {
   id: number
   title: string
   content: string
   projects: string[]
+  attachments: Attachment[]
   created_at: string
   updated_at: string
 }

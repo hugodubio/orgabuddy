@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import type { Task, Priority } from '../types'
 import { useTasksStore } from '../store/tasks'
 import { useProjectsStore } from '../store/projects'
+import Attachments from './Attachments'
 
 const PRIORITY_CONFIG: { key: Priority; label: string; color: string; bg: string }[] = [
   { key: 'alta',  label: 'Urgente',  color: '#d95b4a', bg: '#fff0ee' },
@@ -21,7 +22,7 @@ export default function TaskCard({ task }: Props) {
   const [addingUrl, setAddingUrl] = useState(false)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { toggleDone, deleteTask, tasks, updateLinks, updateExternalLinks, updateTaskField, updateProjects } = useTasksStore()
+  const { toggleDone, deleteTask, tasks, updateLinks, updateExternalLinks, updateTaskField, updateProjects, updateAttachments } = useTasksStore()
   const { projects } = useProjectsStore()
 
   const linkedTasks = tasks.filter((t) => task.links.includes(t.id))
@@ -355,6 +356,16 @@ export default function TaskCard({ task }: Props) {
               )}
             </div>
           )}
+
+          {/* Attachments */}
+          <div className="px-4 py-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
+            <p className="label-caps mb-2">Anexos</p>
+            <Attachments
+              attachments={task.attachments ?? []}
+              onUpdate={(a) => updateAttachments(task.id, a)}
+              context={`task-${task.id}`}
+            />
+          </div>
 
           {/* Add link footer */}
           <div className="px-4 pb-3">

@@ -13,6 +13,7 @@ interface NotesState {
   updateNote: (id: number, title: string, content: string, projects?: string[]) => Promise<void>
   deleteNote: (id: number) => Promise<void>
   selectNote: (id: number | null) => void
+  updateNoteAttachments: (id: number, attachments: import('../types').Attachment[]) => Promise<void>
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
@@ -61,4 +62,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   selectNote: (id) => set({ selectedId: id }),
+
+  updateNoteAttachments: async (id, attachments) => {
+    set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, attachments } : n)) }))
+    await supabase.from('ob_notes').update({ attachments }).eq('id', id)
+  },
 }))

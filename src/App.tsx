@@ -17,6 +17,8 @@ import CommandPalette from './components/CommandPalette'
 import SearchView from './components/SearchView'
 import AdminPanel from './components/AdminPanel'
 import TimeView from './components/TimeView'
+import FocusMode from './components/FocusMode'
+import { useReminders } from './hooks/useReminders'
 
 function ViewToggle() {
   const { displayMode, setDisplayMode } = useTasksStore()
@@ -151,7 +153,10 @@ export default function App() {
   const { fetchProjects } = useProjectsStore()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)
+
+  useReminders(tasks, userId)
 
   useEffect(() => { fetchTasks(); fetchProjects() }, [fetchTasks, fetchProjects])
 
@@ -312,7 +317,21 @@ export default function App() {
           <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
-              <ViewToggle />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFocusMode(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all hover:scale-105"
+                  style={{ background: 'var(--brand-secondary)', color: '#fff' }}
+                  title="Entrar em modo foco"
+                >
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 12 12">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+                    <circle cx="6" cy="6" r="2" fill="currentColor"/>
+                  </svg>
+                  Foco
+                </button>
+                <ViewToggle />
+              </div>
             </div>
 
             {displayMode === 'list' && (
@@ -389,6 +408,10 @@ export default function App() {
           onClose={() => setPaletteOpen(false)}
           onFocusCapture={focusCapture}
         />
+      )}
+
+      {focusMode && userId && (
+        <FocusMode userId={userId} onExit={() => setFocusMode(false)} />
       )}
     </div>
   )

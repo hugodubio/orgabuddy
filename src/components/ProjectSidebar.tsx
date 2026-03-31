@@ -112,8 +112,8 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
   const navBtn = (active: boolean) =>
     `w-full flex items-center gap-2.5 py-[7px] pr-3 text-[13px] transition-all rounded-r-md ${
       active
-        ? 'pl-[10px] border-l-[2px] border-[var(--amber)] bg-[#1d1a15] text-[var(--sidebar-text-active)]'
-        : 'pl-3 border-l-[2px] border-transparent text-[var(--sidebar-text)] hover:bg-[#181510] hover:text-[#c8bfb4]'
+        ? 'pl-[10px] border-l-[2px] sidebar-active-item'
+        : 'pl-3 border-l-[2px] border-transparent text-[var(--sidebar-text)] hover:bg-[#161310] hover:text-[#ccc4b8]'
     }`
 
   return (

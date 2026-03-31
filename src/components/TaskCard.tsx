@@ -72,12 +72,10 @@ export default function TaskCard({ task }: Props) {
   }, [task.id, updateTaskField])
 
   return (
-    <div className={`group rounded-lg transition-colors ${task.done ? 'opacity-40' : ''}`}>
-      {/* Row */}
-      <div
-        className="flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer relative overflow-hidden"
-        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface)')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+    <div className={`group task-card ${task.done ? 'done' : ''}`}>
+      {/* Priority left bar */}
+      <div className="flex items-start gap-3 px-3 py-2.5 cursor-pointer relative overflow-hidden rounded-[10px]"
+        style={{ borderLeft: `3px solid ${priorityCfg.color}` }}
       >
         {/* Checkbox */}
         <button
@@ -101,16 +99,10 @@ export default function TaskCard({ task }: Props) {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-1 mt-1.5">
-            {/* Priority pill */}
-            <span className="text-[9px] px-1.5 py-[3px] font-bold tracking-wider uppercase"
-              style={{ background: priorityCfg.bg, color: priorityCfg.color, fontFamily: 'Syne, sans-serif', borderRadius: '2px' }}>
-              {priorityCfg.label}
-            </span>
-
             {task.projects.map((pid) => {
               const p = getProject(pid)
               return p ? (
-                <span key={pid} className="text-[11px] px-1.5 py-0.5 rounded-[3px] font-medium"
+                <span key={pid} className="text-[11px] px-2 py-0.5 rounded-full font-medium"
                   style={{ background: p.color_bg, color: p.color_text }}>
                   {p.label}
                 </span>
@@ -118,7 +110,7 @@ export default function TaskCard({ task }: Props) {
             })}
 
             {tags.map((tag) => (
-              <span key={tag} className="text-[11px] px-1.5 py-0.5 rounded-[3px]"
+              <span key={tag} className="text-[11px] px-2 py-0.5 rounded-full"
                 style={{ background: 'var(--amber-bg)', color: 'var(--amber)' }}>
                 #{tag}
               </span>

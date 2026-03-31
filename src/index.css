@@ -5,33 +5,39 @@
 @tailwind utilities;
 
 :root {
-  /* Content — warm but with more bite */
-  --bg:          #e9e2d4;
-  --surface:     #f4f0e8;
-  --border:      #cec6b8;
-  --border-soft: #ddd8ce;
+  /* Content */
+  --bg:          #d9d0c2;
+  --surface:     #f6f2eb;
+  --border:      #bfb8ac;
+  --border-soft: #cec8bc;
 
-  /* Text — high contrast */
-  --text-1: #0e0c09;
-  --text-2: #4a4138;
-  --text-3: #968b7e;
+  /* Text */
+  --text-1: #0d0b08;
+  --text-2: #453c33;
+  --text-3: #8c8076;
 
-  /* Sidebar — near-black with warmth */
-  --sidebar-bg:     #0f0d0a;
-  --sidebar-hover:  #191612;
-  --sidebar-active: #1d1a15;
-  --sidebar-text:   #766e65;
+  /* Sidebar */
+  --sidebar-bg:     #0c0a07;
+  --sidebar-hover:  #141210;
+  --sidebar-active: #1b1710;
+  --sidebar-text:   #6a6158;
   --sidebar-text-active: #f2e8d8;
-  --sidebar-border: #1f1c17;
+  --sidebar-border: #1a1712;
 
-  /* Accent — more saturation */
-  --amber:    #cf6424;
-  --amber-bg: #fdefd9;
+  /* Accent */
+  --amber:    #e06820;
+  --amber-bg: #fdebd4;
 
   /* Priority */
-  --red:    #c8402e;
+  --red:    #d03a28;
   --yellow: #c07e1a;
   --slate:  #7d909e;
+
+  /* Shadows */
+  --shadow-sm:    0 1px 3px rgba(18,10,2,0.10), 0 1px 2px rgba(18,10,2,0.08);
+  --shadow-md:    0 4px 14px rgba(18,10,2,0.12), 0 2px 4px rgba(18,10,2,0.08);
+  --shadow-hover: 0 8px 24px rgba(18,10,2,0.14), 0 3px 6px rgba(18,10,2,0.08);
+  --shadow-amber: 0 0 0 3px color-mix(in srgb, var(--amber) 18%, transparent);
 }
 
 * { box-sizing: border-box; }
@@ -40,9 +46,13 @@ body {
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 16px;
   background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 20% 10%, rgba(210,185,148,0.30) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 80% 90%, rgba(180,158,128,0.18) 0%, transparent 60%);
   color: var(--text-1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 /* Film grain */
@@ -52,7 +62,7 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.045;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size: 256px 256px;
 }
@@ -69,7 +79,7 @@ body::after {
 .sidebar-input { font-family: 'DM Sans', sans-serif; }
 .sidebar-input::placeholder { color: #3a3530; }
 
-/* Label caps — Syne uppercase labels throughout the app */
+/* Label caps */
 .label-caps {
   font-family: 'Syne', sans-serif;
   font-size: 9px;
@@ -79,10 +89,10 @@ body::after {
   color: var(--text-3);
 }
 
-/* Capture bar — amber focus ring */
+/* Capture bar */
 .capture-input:focus {
   border-color: var(--amber) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 12%, transparent);
+  box-shadow: var(--shadow-amber) !important;
 }
 
 .capture-input::placeholder {
@@ -91,6 +101,33 @@ body::after {
   font-size: 14px;
   font-weight: 300;
   color: var(--text-3);
+}
+
+/* Task card */
+.task-card {
+  background: var(--surface);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(180,168,150,0.5);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.task-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.task-card.done {
+  opacity: 0.45;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Sidebar active glow */
+.sidebar-active-item {
+  background: linear-gradient(90deg, rgba(224,104,32,0.14) 0%, rgba(224,104,32,0.04) 100%) !important;
+  border-left-color: var(--amber) !important;
+  color: var(--sidebar-text-active) !important;
 }
 
 /* Mobile safe area */

@@ -198,11 +198,12 @@ export default function CaptureBar() {
           }}
           placeholder={mode === 'note' ? 'escreve a nota…' : 'o que tens na cabeça?'}
           disabled={loading}
-          className="capture-input w-full rounded-lg px-4 py-3.5 text-[14px] outline-none transition-all pr-20 disabled:opacity-60"
+          className="capture-input w-full rounded-xl px-4 py-4 text-[15px] outline-none transition-all pr-20 disabled:opacity-60"
           style={{
-            background: error ? '#fdf0ee' : recording ? '#fdf6ee' : mode === 'note' ? 'var(--surface)' : 'var(--surface)',
-            border: error ? '1.5px solid var(--red)' : recording ? '1.5px solid var(--amber)' : mode === 'note' ? '1.5px solid var(--border-soft)' : '1.5px solid var(--border)',
+            background: error ? '#fdf0ee' : recording ? '#fdf6ee' : 'var(--surface)',
+            border: error ? '1.5px solid var(--red)' : recording ? '1.5px solid var(--amber)' : '1.5px solid var(--border-soft)',
             color: 'var(--text-1)',
+            boxShadow: 'var(--shadow-md)',
           }}
         />
         <div className="absolute right-3 flex items-center gap-2">

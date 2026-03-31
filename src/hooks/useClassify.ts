@@ -4,9 +4,17 @@ import { useProjectsStore } from '../store/projects'
 
 const ALTA_WORDS = [
   'urgente', 'urgente!', 'hoje', 'agora', 'deadline', 'asap', 'fix', 'bug',
-  'erro', 'crítico', 'critico', 'reunião', 'reuniao', 'meeting', 'amanhã',
-  'amanha', 'breaking', 'bloqueado', 'bloqueante', 'importante',
+  'erro', 'crítico', 'critico', 'reunião', 'reuniao', 'meeting',
+  'breaking', 'bloqueado', 'bloqueante', 'importante',
 ]
+
+const AMANHA_WORDS = ['amanhã', 'amanha']
+
+function getTomorrow() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
 
 const BAIXA_WORDS = [
   'ideia', 'talvez', 'futuro', 'explorar', 'investigar', 'pesquisar',
@@ -61,6 +69,13 @@ function classifyLocally(
     }
   }
 
+  // Detect "amanhã" → due_date tomorrow, priority normal
+  const isAmanha = AMANHA_WORDS.some((w) => lower.includes(w))
+  if (isAmanha && !overridePriority) {
+    priority = 'média'
+    reason = 'Para amanhã'
+  }
+
   // Clean text: capitalize first letter
   const cleaned = text.charAt(0).toUpperCase() + text.slice(1)
 
@@ -71,6 +86,7 @@ function classifyLocally(
     reason,
     type,
     tags: [],
+    due_date: isAmanha ? getTomorrow() : null,
   }
 }
 

@@ -43,6 +43,7 @@ export interface ClassifyResult {
   reason: string
   type: TaskType
   tags: string[]
+  due_date?: string | null
 }
 
 export interface Habit {

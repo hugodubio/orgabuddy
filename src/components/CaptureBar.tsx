@@ -110,6 +110,7 @@ export default function CaptureBar() {
           source: 'manual',
           done: false,
           user_id: userId ?? 'hugo',
+          due_date: classified.due_date ?? null,
         })
         .select()
         .single()

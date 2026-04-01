@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTasksStore } from '../store/tasks'
 import { useProjectsStore } from '../store/projects'
+import { useAuthStore } from '../store/auth'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 
@@ -54,6 +55,7 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { projects } = useProjectsStore()
+  const { userId } = useAuthStore()
 
   const submit = async () => {
     const text = title.trim()
@@ -71,6 +73,8 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
       tags: [],
       done: false,
       links: [],
+      due_date: date,
+      user_id: userId ?? 'hugo',
     })
     setSaving(false)
     if (err) { setError('Erro ao guardar evento'); return }
@@ -93,10 +97,11 @@ function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
         className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none placeholder:text-[#ccc] mb-2"
       />
       <input
+        type="time"
         value={time}
         onChange={(e) => setTime(e.target.value)}
-        placeholder="Hora (ex: 20:00)"
-        className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none placeholder:text-[#ccc] mb-2"
+        className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none mb-2"
+        style={{ color: time ? '#1a1a1a' : '#aaa' }}
       />
       <select
         value={selectedProject}
@@ -167,7 +172,13 @@ export default function CalendarView() {
     ? `${year}-${pad(month + 1)}-${pad(selectedDay)}`
     : null
 
-  const selectedEvents = selectedDateStr ? (eventsByDate[selectedDateStr] ?? []) : []
+  const selectedEvents = selectedDateStr
+    ? (eventsByDate[selectedDateStr] ?? []).slice().sort((a, b) => {
+        const ta = parseEventTime(a) ?? '99:99'
+        const tb = parseEventTime(b) ?? '99:99'
+        return ta.localeCompare(tb)
+      })
+    : []
 
   return (
     <div className="max-w-3xl mx-auto w-full">

@@ -321,7 +321,7 @@ export default function App() {
                 <button
                   onClick={() => setFocusMode(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all hover:scale-105"
-                  style={{ background: 'var(--brand-secondary)', color: '#fff' }}
+                  style={{ background: 'var(--brand-secondary)', color: 'var(--brand-primary)' }}
                   title="Entrar em modo foco"
                 >
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 12 12">

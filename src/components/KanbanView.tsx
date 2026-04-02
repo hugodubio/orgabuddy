@@ -31,6 +31,7 @@ function MiniCard({ task, onDragStart }: { task: Task; onDragStart: () => void }
       <div className="flex items-start gap-2">
         <button
           onClick={() => toggleDone(task.id)}
+          aria-label={task.done ? 'Marcar como pendente' : 'Marcar como feita'}
           className="mt-0.5 w-3.5 h-3.5 rounded border border-[#d0d0ce] shrink-0 flex items-center justify-center"
         >
           {task.done && (
@@ -45,6 +46,7 @@ function MiniCard({ task, onDragStart }: { task: Task; onDragStart: () => void }
         {hovered && (
           <button
             onClick={() => deleteTask(task.id)}
+            aria-label="Apagar tarefa"
             className="text-[#ccc] hover:text-red-400 text-[14px] leading-none shrink-0"
           >×</button>
         )}
@@ -145,7 +147,7 @@ export default function KanbanView({ tasks }: Props) {
             <div className="flex items-center gap-2 mb-3 px-1">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
               <span className="text-[12px] font-semibold text-[#1a1a1a]">{label}</span>
-              <span className="ml-auto text-[11px] text-[#aaa]">{col.filter((t) => !t.done).length}</span>
+              <span className="ml-auto text-[11px] text-[#666]">{col.filter((t) => !t.done).length}</span>
             </div>
 
             {/* Drop zone */}
@@ -197,7 +199,7 @@ export default function KanbanView({ tasks }: Props) {
               ) : (
                 <button
                   onClick={() => { setAddingIn(key); setNewText('') }}
-                  className="w-full flex items-center gap-1.5 px-2 py-2 text-[12px] text-[#bbb] hover:text-[#666] rounded-lg hover:bg-black/5 transition-colors"
+                  className="w-full flex items-center gap-1.5 px-2 py-2 text-[12px] text-[#777] hover:text-[#444] rounded-lg hover:bg-black/5 transition-colors"
                 >
                   <span>+</span> Adicionar
                 </button>

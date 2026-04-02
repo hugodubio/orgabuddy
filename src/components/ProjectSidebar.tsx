@@ -134,6 +134,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
             disabled={syncing}
             className="transition-colors disabled:opacity-30"
             style={{ color: 'var(--sidebar-text)' }}
+            aria-label="Sincronizar com Mystic Fyah"
             title="Sincronizar com Mystic Fyah"
           >
             <SyncIcon spinning={syncing} />
@@ -319,6 +320,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                         <button onClick={(e) => { e.stopPropagation(); setAdding(p.id); setNewLabel('') }}
                           className="opacity-50 hover:opacity-100 leading-none text-[15px]">+</button>
                         <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id) }}
+                          aria-label="Apagar projeto"
                           className="opacity-50 hover:opacity-100 leading-none" style={{ color: 'var(--red)' }}>×</button>
                       </>
                     )}
@@ -390,6 +392,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                     )}
                     {hoveredProject === child.id && (
                       <button onClick={(e) => { e.stopPropagation(); deleteProject(child.id) }}
+                        aria-label="Apagar sub-projeto"
                         className="opacity-50 hover:opacity-100 leading-none" style={{ color: 'var(--red)' }}>×</button>
                     )}
                   </button>

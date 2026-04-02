@@ -81,6 +81,7 @@ export default function TaskCard({ task }: Props) {
         {/* Checkbox */}
         <button
           onClick={() => toggleDone(task.id)}
+          aria-label={task.done ? 'Marcar como pendente' : 'Marcar como feita'}
           className="mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center transition-colors"
           style={{ border: '1px solid var(--border)' }}
         >
@@ -112,7 +113,7 @@ export default function TaskCard({ task }: Props) {
 
             {tags.map((tag) => (
               <span key={tag} className="text-[11px] px-2 py-0.5 rounded-full"
-                style={{ background: 'var(--amber-bg)', color: 'var(--amber)' }}>
+                style={{ background: 'var(--amber-bg)', color: 'var(--amber-text)' }}>
                 #{tag}
               </span>
             ))}
@@ -125,7 +126,7 @@ export default function TaskCard({ task }: Props) {
                 <span className="text-[10px] px-1.5 py-[3px] rounded-[3px] font-medium" style={{ background: '#fee2e2', color: '#dc2626' }}>Atrasada</span>
               )
               if (isToday) return (
-                <span className="text-[10px] px-1.5 py-[3px] rounded-[3px] font-medium" style={{ background: 'var(--amber-bg)', color: 'var(--amber)' }}>Hoje</span>
+                <span className="text-[10px] px-1.5 py-[3px] rounded-[3px] font-medium" style={{ background: 'var(--amber-bg)', color: 'var(--amber-text)' }}>Hoje</span>
               )
               return (
                 <span className="text-[10px] px-1.5 py-[3px] rounded-[3px]" style={{ background: 'var(--bg)', color: 'var(--text-3)' }}>
@@ -162,6 +163,7 @@ export default function TaskCard({ task }: Props) {
         {/* Delete */}
         <button
           onClick={(e) => { e.stopPropagation(); deleteTask(task.id) }}
+          aria-label="Apagar tarefa"
           className="opacity-0 group-hover:opacity-100 mt-0.5 w-5 h-5 flex items-center justify-center transition-all shrink-0"
           style={{ color: 'var(--text-3)' }}
         >×</button>

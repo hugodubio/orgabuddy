@@ -19,7 +19,7 @@
   /* Text */
   --text-1: #2C3E50;
   --text-2: #4A5A6A;
-  --text-3: #717F8D;
+  --text-3: #4F5D6B;
 
   /* Sidebar */
   --sidebar-bg:          #2C3E50;
@@ -30,8 +30,9 @@
   --sidebar-border:      #34495E;
 
   /* Accent (maps to teal for general UI) */
-  --amber:    #1ABC9C;
-  --amber-bg: #E8F8F5;
+  --amber:      #1ABC9C;
+  --amber-bg:   #E8F8F5;
+  --amber-text: #0a6b52;
 
   /* Gold — CTAs & focal highlights */
   --gold:    #F1C40F;

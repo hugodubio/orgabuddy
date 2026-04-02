@@ -85,9 +85,9 @@ export default function KanbanView({ tasks }: Props) {
   const [saving, setSaving] = useState(false)
 
   const handleDrop = async (priority: Priority) => {
-    if (dragId === null || dragOver === priority) return
+    if (dragId === null) return
     const task = tasks.find((t) => t.id === dragId)
-    if (!task) return
+    if (!task || task.priority === priority) return
     await supabase
       .from('ob_tasks')
       .update({ priority, updated_at: new Date().toISOString() })

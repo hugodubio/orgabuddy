@@ -11,9 +11,11 @@ interface TimeState {
   timerDescription: string
   startTimer: (project: string | null, description: string) => void
   stopTimer: () => Promise<void>
+  clearTimer: () => { start: Date; project: string | null; description: string } | null
   fetchEntries: (from?: string, to?: string) => Promise<void>
   addManual: (startedAt: string, endedAt: string, project: string | null, description: string) => Promise<void>
   deleteEntry: (id: number) => Promise<void>
+  updateEntry: (id: number, description: string, projectId: string | null) => Promise<void>
 }
 
 export const useTimeStore = create<TimeState>((set, get) => ({
@@ -25,6 +27,13 @@ export const useTimeStore = create<TimeState>((set, get) => ({
 
   startTimer: (project, description) => {
     set({ timerStart: new Date(), timerProject: project, timerDescription: description })
+  },
+
+  clearTimer: () => {
+    const { timerStart, timerProject, timerDescription } = get()
+    if (!timerStart) return null
+    set({ timerStart: null, timerProject: null, timerDescription: '' })
+    return { start: timerStart, project: timerProject, description: timerDescription }
   },
 
   stopTimer: async () => {
@@ -74,5 +83,17 @@ export const useTimeStore = create<TimeState>((set, get) => ({
   deleteEntry: async (id) => {
     await supabase.from('ob_time_entries').delete().eq('id', id)
     set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }))
+  },
+
+  updateEntry: async (id, description, projectId) => {
+    const { data } = await supabase
+      .from('ob_time_entries')
+      .update({ description: description || null, project_id: projectId || null })
+      .eq('id', id)
+      .select()
+      .single()
+    if (data) set((s) => ({
+      entries: s.entries.map((e) => e.id === id ? (data as TimeEntry) : e)
+    }))
   },
 }))

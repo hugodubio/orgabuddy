@@ -171,8 +171,10 @@ function SummaryView() {
   )
 }
 
+type PendingEntry = { startedAt: Date; endedAt: Date; project: string; description: string }
+
 export default function TimeView() {
-  const { entries, loading, timerStart, timerProject, timerDescription, startTimer, stopTimer, fetchEntries, addManual, deleteEntry } = useTimeStore()
+  const { entries, loading, timerStart, timerProject, timerDescription, startTimer, clearTimer, fetchEntries, addManual, deleteEntry } = useTimeStore()
   const [tab, setTab] = useState<'hoje' | 'resumo'>('hoje')
   const [selProject, setSelProject] = useState('')
   const [selDesc, setSelDesc] = useState('')
@@ -182,6 +184,7 @@ export default function TimeView() {
   const [manualEnd, setManualEnd] = useState('')
   const [manualProject, setManualProject] = useState('')
   const [manualDesc, setManualDesc] = useState('')
+  const [pendingEntry, setPendingEntry] = useState<PendingEntry | null>(null)
   const elapsed = useElapsed(timerStart)
 
   const today = new Date().toISOString().split('T')[0]
@@ -195,11 +198,33 @@ export default function TimeView() {
 
   const handleStartStop = () => {
     if (timerStart) {
-      stopTimer().then(() => fetchEntries(today, today + 'T23:59:59'))
+      const captured = clearTimer()
+      if (captured) {
+        setPendingEntry({
+          startedAt: captured.start,
+          endedAt: new Date(),
+          project: captured.project ?? '',
+          description: captured.description,
+        })
+      }
     } else {
       startTimer(selProject || null, selDesc)
     }
   }
+
+  const handleConfirmPending = async () => {
+    if (!pendingEntry) return
+    await addManual(
+      pendingEntry.startedAt.toISOString(),
+      pendingEntry.endedAt.toISOString(),
+      pendingEntry.project || null,
+      pendingEntry.description,
+    )
+    setPendingEntry(null)
+    fetchEntries(today, today + 'T23:59:59')
+  }
+
+  const handleDiscardPending = () => setPendingEntry(null)
 
   const handleManual = async () => {
     if (!manualStart || !manualEnd) return
@@ -231,7 +256,43 @@ export default function TimeView() {
         <>
           {/* Timer */}
           <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            {timerStart ? (
+            {pendingEntry ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[12px] font-semibold" style={{ color: 'var(--amber)' }}>Sessão concluída</span>
+                  <span className="text-[12px]" style={{ color: 'var(--text-3)' }}>
+                    {fmtTime(pendingEntry.startedAt.toISOString())} → {fmtTime(pendingEntry.endedAt.toISOString())}
+                    {' · '}
+                    {fmt(Math.max(1, Math.round((pendingEntry.endedAt.getTime() - pendingEntry.startedAt.getTime()) / 60000)))}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <ProjectSelect value={pendingEntry.project} onChange={v => setPendingEntry(p => p && ({ ...p, project: v }))} />
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Descrição (opcional)"
+                    value={pendingEntry.description}
+                    onChange={e => setPendingEntry(p => p && ({ ...p, description: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleConfirmPending() }}
+                    className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleConfirmPending}
+                    className="px-4 py-2 rounded-xl text-[13px] font-semibold"
+                    style={{ background: 'var(--amber)', color: '#fff' }}>
+                    Guardar
+                  </button>
+                  <button onClick={handleDiscardPending}
+                    className="px-4 py-2 rounded-xl text-[13px]"
+                    style={{ background: 'var(--border)', color: 'var(--text-2)' }}>
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            ) : timerStart ? (
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[36px] font-mono font-bold" style={{ color: 'var(--text-1)', letterSpacing: '-0.02em' }}>

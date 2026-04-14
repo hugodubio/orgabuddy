@@ -42,6 +42,88 @@ function sourceDot(source: Task['source']) {
   return 'bg-[#1a1a1a]'
 }
 
+interface EditEventFormProps {
+  task: Task
+  onClose: () => void
+  onSaved: () => void
+  onDelete: () => void
+}
+
+function EditEventForm({ task, onClose, onSaved, onDelete }: EditEventFormProps) {
+  const [title, setTitle] = useState(task.text.replace(/^🎵\s*/, ''))
+  const [time, setTime] = useState(parseEventTime(task) ?? '')
+  const [selectedProject, setSelectedProject] = useState<string>(task.projects[0] ?? '')
+  const [saving, setSaving] = useState(false)
+  const { projects } = useProjectsStore()
+
+  const submit = async () => {
+    const text = title.trim()
+    if (!text || saving) return
+    setSaving(true)
+    const date = task.due_date ?? parseEventDate(task) ?? ''
+    const reason = time ? `${date} às ${time}` : date
+    await supabase.from('ob_tasks').update({
+      text,
+      reason,
+      projects: selectedProject ? [selectedProject] : [],
+    }).eq('id', task.id)
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  const handleDelete = async () => {
+    await supabase.from('ob_tasks').delete().eq('id', task.id)
+    onDelete()
+    onClose()
+  }
+
+  return (
+    <div className="mt-2 p-3 rounded-lg" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+      <p className="text-[11px] mb-2" style={{ color: 'var(--text-3)' }}>Editar evento</p>
+      <input
+        autoFocus
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onClose() }}
+        className="w-full rounded px-2 py-1.5 text-[13px] outline-none mb-2"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+      />
+      <input
+        type="time"
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+        className="w-full rounded px-2 py-1.5 text-[13px] outline-none mb-2"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: time ? 'var(--text-1)' : 'var(--text-3)' }}
+      />
+      <select
+        value={selectedProject}
+        onChange={(e) => setSelectedProject(e.target.value)}
+        className="w-full rounded px-2 py-1.5 text-[13px] outline-none mb-3"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: selectedProject ? 'var(--text-1)' : 'var(--text-3)' }}
+      >
+        <option value="">Sem projeto</option>
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>{p.label}</option>
+        ))}
+      </select>
+      <div className="flex items-center gap-2">
+        <button onClick={submit} disabled={!title.trim() || saving}
+          className="px-3 py-1 text-[12px] text-white rounded disabled:opacity-40"
+          style={{ background: 'var(--amber)' }}>
+          {saving ? '…' : 'Guardar'}
+        </button>
+        <button onClick={onClose} className="px-2 py-1 text-[12px]" style={{ color: 'var(--text-3)' }}>
+          Cancelar
+        </button>
+        <button onClick={handleDelete} className="ml-auto px-2 py-1 text-[12px]" style={{ color: '#c8402e' }}>
+          Apagar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 interface AddEventFormProps {
   date: string
   onClose: () => void
@@ -138,6 +220,7 @@ export default function CalendarView() {
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [addingEvent, setAddingEvent] = useState(false)
+  const [editingEventId, setEditingEventId] = useState<number | null>(null)
 
   const calendarTasks = tasks.filter(
     (t) => t.source === 'calendar' || t.source === 'mystic_event' || t.source === 'mystic_task'
@@ -280,17 +363,41 @@ export default function CalendarView() {
           )}
 
           {selectedEvents.map((t) => (
-            <div key={t.id} className="flex items-start gap-2 py-2 border-b border-[#f5f5f3] last:border-0">
-              <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${sourceDot(t.source)}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-[#1a1a1a]">{t.text.replace(/^🎵\s*/, '')}</p>
-                {parseEventTime(t) && (
-                  <p className="text-[11px] text-[#aaa]">{parseEventTime(t)}</p>
-                )}
-                {t.source === 'mystic_event' && (
-                  <span className="text-[10px] text-purple-400">Mystic Fyah</span>
+            <div key={t.id}>
+              <div
+                className="flex items-start gap-2 py-2 border-b border-[#f5f5f3] last:border-0 group"
+                onClick={() => {
+                  if (t.source === 'calendar') {
+                    setEditingEventId(editingEventId === t.id ? null : t.id)
+                    setAddingEvent(false)
+                  }
+                }}
+                style={{ cursor: t.source === 'calendar' ? 'pointer' : 'default' }}
+              >
+                <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${sourceDot(t.source)}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] text-[#1a1a1a]">{t.text.replace(/^🎵\s*/, '')}</p>
+                  {parseEventTime(t) && (
+                    <p className="text-[11px] text-[#aaa]">{parseEventTime(t)}</p>
+                  )}
+                  {t.source === 'mystic_event' && (
+                    <span className="text-[10px] text-purple-400">Mystic Fyah</span>
+                  )}
+                </div>
+                {t.source === 'calendar' && (
+                  <span className="text-[11px] opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'var(--text-2)' }}>
+                    editar
+                  </span>
                 )}
               </div>
+              {editingEventId === t.id && (
+                <EditEventForm
+                  task={t}
+                  onClose={() => setEditingEventId(null)}
+                  onSaved={fetchTasks}
+                  onDelete={fetchTasks}
+                />
+              )}
             </div>
           ))}
 

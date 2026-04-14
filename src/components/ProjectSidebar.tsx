@@ -36,7 +36,7 @@ export function useProjectColors() {
 }
 
 export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
-  const { tasks, syncing, activeProject, activeTag, onlyUrgent, view, setActiveProject, setActiveTag, setOnlyUrgent, setView, syncFromMystic, fetchTasks } = useTasksStore()
+  const { tasks, syncing, activeProject, activeTag, view, setActiveProject, setActiveTag, setView, syncFromMystic, fetchTasks } = useTasksStore()
   const { userName, isAdmin, logout } = useAuthStore()
   const { projects, fetchProjects, addProject, deleteProject, updateProject } = useProjectsStore()
   const [adding, setAdding] = useState<string | null>(null) // null = top-level, string = parentId
@@ -158,33 +158,19 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
       <nav className="flex-1 px-2 pt-3 overflow-y-auto space-y-0.5">
         {/* Foco */}
         <button
-          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('focus') }}
-          className={navBtn(view === 'focus' && !activeProject && !onlyUrgent && !activeTag)}
+          onClick={() => { setActiveProject(null); setView('focus') }}
+          className={navBtn(view === 'focus' && !activeProject && !activeTag)}
         >
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
             <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
             <circle cx="7" cy="7" r="2" fill="currentColor"/>
           </svg>
-          <span>Foco do dia</span>
+          <span>Foco</span>
           {totalPending > 0 && <span className="ml-auto text-[11px]" style={{ color: '#5a5248' }}>{totalPending}</span>}
         </button>
 
         <button
-          onClick={() => { setActiveProject(null); setOnlyUrgent(true); setView('focus') }}
-          className={navBtn(view === 'focus' && onlyUrgent)}
-        >
-          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
-            <rect x="1.5" y="1.5" width="4.5" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-            <rect x="8" y="1.5" width="4.5" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-          </svg>
-          <span>A Fazer</span>
-          {tasks.filter((t) => !t.done).length > 0 && (
-            <span className="ml-auto text-[11px]" style={{ color: '#5a5248' }}>{tasks.filter((t) => !t.done).length}</span>
-          )}
-        </button>
-
-        <button
-          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('calendar') }}
+          onClick={() => { setActiveProject(null); setView('calendar') }}
           className={navBtn(view === 'calendar')}
         >
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
@@ -197,7 +183,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
 <button
-          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('time') }}
+          onClick={() => { setActiveProject(null); setView('time') }}
           className={navBtn(view === 'time')}
         >
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
@@ -209,7 +195,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
         <button
-          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('notes') }}
+          onClick={() => { setActiveProject(null); setView('notes') }}
           className={navBtn(view === 'notes')}
         >
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
@@ -236,7 +222,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
         <button
-          onClick={() => { setActiveProject(null); setOnlyUrgent(false); setView('search') }}
+          onClick={() => { setActiveProject(null); setView('search') }}
           className={navBtn(view === 'search')}
         >
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
@@ -287,7 +273,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                 onMouseLeave={() => setHoveredProject(null)}
               >
                 <button
-                  onClick={() => { setActiveProject(p.id); setOnlyUrgent(false); setView('focus') }}
+                  onClick={() => { setActiveProject(p.id); setView('focus') }}
                   className={navBtn(isActive)}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -382,7 +368,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
                   onMouseLeave={() => setHoveredProject(null)}
                 >
                   <button
-                    onClick={() => { setActiveProject(child.id); setOnlyUrgent(false); setView('focus') }}
+                    onClick={() => { setActiveProject(child.id); setView('focus') }}
                     className={navBtn(view === 'focus' && activeProject === child.id)}
                   >
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: child.dot_color }} />

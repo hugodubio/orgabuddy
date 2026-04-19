@@ -12,11 +12,13 @@ const PRIORITY_CONFIG: { key: Priority; label: string; color: string; bg: string
 
 interface Props {
   task: Task
+  onDragStart?: (e: React.DragEvent, id: number) => void
 }
 
-export default function TaskCard({ task }: Props) {
+export default function TaskCard({ task, onDragStart }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [editingText, setEditingText] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const [textVal, setTextVal] = useState(task.text)
   const [newUrl, setNewUrl] = useState('')
   const [addingUrl, setAddingUrl] = useState(false)
@@ -73,7 +75,18 @@ export default function TaskCard({ task }: Props) {
   }, [task.id, updateTaskField])
 
   return (
-    <div className={`group task-card ${task.done ? 'done' : ''}`}>
+    <div
+      className={`group task-card ${task.done ? 'done' : ''} transition-opacity`}
+      style={{ opacity: dragging ? 0.4 : 1, cursor: 'grab' }}
+      draggable
+      onDragStart={(e) => {
+        setDragging(true)
+        e.dataTransfer.setData('taskId', String(task.id))
+        e.dataTransfer.effectAllowed = 'move'
+        onDragStart?.(e, task.id)
+      }}
+      onDragEnd={() => setDragging(false)}
+    >
       {/* Priority left bar */}
       <div className="flex items-start gap-3 px-3 py-2.5 cursor-pointer relative overflow-hidden rounded-[10px]"
         style={{ borderLeft: `3px solid ${priorityCfg.color}` }}

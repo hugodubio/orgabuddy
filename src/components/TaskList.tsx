@@ -5,6 +5,12 @@ import { useClassify } from '../hooks/useClassify'
 import { useTasksStore } from '../store/tasks'
 import { supabase } from '../lib/supabase'
 
+const DROP_COLORS: Record<string, string> = {
+  alta:  '#fee2e2',
+  média: '#fef9c3',
+  baixa: '#f0f4f7',
+}
+
 const GROUPS = [
   { key: 'alta',  label: 'Urgente',             pip: 'bg-red-400' },
   { key: 'média', label: 'Esta semana',          pip: 'bg-amber-400' },
@@ -97,6 +103,18 @@ interface Props {
 
 export default function TaskList({ tasks }: Props) {
   const [adding, setAdding] = useState<Priority | null>(null)
+  const [dragOver, setDragOver] = useState<Priority | null>(null)
+  const { updateTaskField } = useTasksStore()
+
+  const handleDrop = async (e: React.DragEvent, targetPriority: Priority) => {
+    e.preventDefault()
+    setDragOver(null)
+    const taskId = Number(e.dataTransfer.getData('taskId'))
+    if (!taskId) return
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task || task.priority === targetPriority) return
+    await updateTaskField(taskId, { priority: targetPriority })
+  }
 
   if (tasks.length === 0) {
     return (
@@ -111,7 +129,14 @@ export default function TaskList({ tasks }: Props) {
       {GROUPS.map(({ key, label, pip }) => {
         const group = tasks.filter((t) => t.priority === key)
         return (
-          <section key={key}>
+          <section
+            key={key}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(key) }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null) }}
+            onDrop={(e) => handleDrop(e, key)}
+            className="rounded-xl transition-colors"
+            style={dragOver === key ? { background: DROP_COLORS[key], outline: '2px dashed #ccc' } : {}}
+          >
             <div className="flex items-center gap-2 mb-2 px-3">
               <span className={`w-1.5 h-1.5 rounded-full ${pip}`} />
               <span className="text-[11px] uppercase tracking-widest text-[#aaa] font-medium">

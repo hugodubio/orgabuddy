@@ -19,6 +19,7 @@ export default function TaskCard({ task, onDragStart }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [editingText, setEditingText] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [hiding, setHiding] = useState(false)
   const [textVal, setTextVal] = useState(task.text)
   const [newUrl, setNewUrl] = useState('')
   const [addingUrl, setAddingUrl] = useState(false)
@@ -76,8 +77,14 @@ export default function TaskCard({ task, onDragStart }: Props) {
 
   return (
     <div
-      className={`group task-card ${task.done ? 'done' : ''} transition-opacity`}
-      style={{ opacity: dragging ? 0.4 : 1, cursor: 'grab' }}
+      className={`group task-card transition-all duration-300`}
+      style={{
+        opacity: hiding ? 0 : dragging ? 0.4 : 1,
+        maxHeight: hiding ? 0 : 1000,
+        overflow: hiding ? 'hidden' : undefined,
+        marginBottom: hiding ? 0 : undefined,
+        cursor: 'grab',
+      }}
       draggable
       onDragStart={(e) => {
         setDragging(true)
@@ -93,7 +100,14 @@ export default function TaskCard({ task, onDragStart }: Props) {
       >
         {/* Checkbox */}
         <button
-          onClick={() => toggleDone(task.id)}
+          onClick={() => {
+            if (!task.done) {
+              setHiding(true)
+              setTimeout(() => toggleDone(task.id), 280)
+            } else {
+              toggleDone(task.id)
+            }
+          }}
           aria-label={task.done ? 'Marcar como pendente' : 'Marcar como feita'}
           className="mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center transition-colors"
           style={{ border: '1px solid var(--border)' }}

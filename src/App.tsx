@@ -146,7 +146,7 @@ export default function App() {
     const hoje = new Date()
     const isMonday = hoje.getDay() === 1
     const semanaPassada = !lastReview || (Date.now() - new Date(lastReview).getTime()) > 6 * 86400000
-    if (isMonday && semanaPassada) setWeeklyReview(true)
+    if (isMonday && semanaPassada) setTimeout(() => setWeeklyReview(true), 3000)
   }, [loading])
 
   // Request notification permission on first load

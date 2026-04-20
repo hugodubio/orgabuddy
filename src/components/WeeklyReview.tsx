@@ -50,9 +50,16 @@ export default function WeeklyReview({ tasks, onClose }: Props) {
     <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-[11px] uppercase tracking-widest mb-1" style={{ color: '#aaa' }}>Revisão semanal</p>
-          <h1 className="text-[26px] font-bold" style={{ color: '#1a1a1a', letterSpacing: '-0.04em' }}>Como foi a semana?</h1>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-widest mb-1" style={{ color: '#aaa' }}>Revisão semanal</p>
+            <h1 className="text-[26px] font-bold" style={{ color: '#1a1a1a', letterSpacing: '-0.04em' }}>Como foi a semana?</h1>
+          </div>
+          <button
+            onClick={close}
+            className="text-[22px] leading-none mt-1 opacity-30 hover:opacity-70 transition-opacity"
+            style={{ color: '#1a1a1a' }}
+          >×</button>
         </div>
 
         {/* Secção 1 — Concluídas */}

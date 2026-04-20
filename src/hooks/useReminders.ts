@@ -51,11 +51,11 @@ export function useReminders(tasks: Task[], userId: string | null) {
       }
     }
 
-    // 17h — fim do dia sem nada feito
-    if (hour >= 17 && !alreadySent(todayKey('evening'))) {
+    // 17h — revisão da tarde
+    if (hour >= 17 && hour < 18 && !alreadySent(todayKey('evening'))) {
       markSent(todayKey('evening'))
-      if (doneTodayCount === 0 && myTasks.length > 0) {
-        notify('OrgaBuddy — Hey 👀', 'Ainda não concluíste nada hoje. Queres entrar em modo Foco?')
+      if (myTasks.length > 0) {
+        notify('OrgaBuddy', `${myTasks.length} tarefa${myTasks.length > 1 ? 's' : ''} por tratar. 2 minutos para rever?`)
       }
     }
   }, [tasks, userId])

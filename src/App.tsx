@@ -18,6 +18,8 @@ import SearchView from './components/SearchView'
 import AdminPanel from './components/AdminPanel'
 import TimeView from './components/TimeView'
 import FocusMode from './components/FocusMode'
+import DailyBriefing from './components/DailyBriefing'
+import WeeklyReview from './components/WeeklyReview'
 import { useReminders } from './hooks/useReminders'
 
 function ViewToggle() {
@@ -130,11 +132,22 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
+  const [weeklyReview, setWeeklyReview] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)
 
   useReminders(tasks, userId)
 
   useEffect(() => { fetchTasks(); fetchProjects() }, [fetchTasks, fetchProjects])
+
+  // Weekly review trigger — segunda-feira, uma vez por semana
+  useEffect(() => {
+    if (loading) return
+    const lastReview = localStorage.getItem('ob_last_review')
+    const hoje = new Date()
+    const isMonday = hoje.getDay() === 1
+    const semanaPassada = !lastReview || (Date.now() - new Date(lastReview).getTime()) > 6 * 86400000
+    if (isMonday && semanaPassada) setWeeklyReview(true)
+  }, [loading])
 
   // Request notification permission on first load
   useEffect(() => {
@@ -257,7 +270,10 @@ export default function App() {
             {displayMode === 'list' && (
               <>
                 {!activeProject && !activeTag && (
-                  <div className="mb-8"><CaptureBar /></div>
+                  <div className="mb-8">
+                    <DailyBriefing tasks={userTasks} />
+                    <CaptureBar />
+                  </div>
                 )}
                 {loading ? (
                   <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
@@ -334,6 +350,10 @@ export default function App() {
 
       {focusMode && userId && (
         <FocusMode userId={userId} onExit={() => setFocusMode(false)} />
+      )}
+
+      {weeklyReview && (
+        <WeeklyReview tasks={userTasks} onClose={() => setWeeklyReview(false)} />
       )}
     </div>
   )

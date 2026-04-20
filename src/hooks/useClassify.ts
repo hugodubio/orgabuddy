@@ -123,16 +123,68 @@ export function useClassify() {
 
   const classify = async (text: string): Promise<ClassifyResult | null> => {
     const projectIds = projects.map((p) => p.id)
-    const { cleaned, priority, projects: overrideProjects, tags } = extractShortcuts(text, projectIds)
+    const { cleaned, priority: overridePriority, projects: overrideProjects, tags } = extractShortcuts(text, projectIds)
 
     setLoading(true)
     try {
-      const result = classifyLocally(cleaned || text, projects, overrideProjects, priority)
-      result.tags = tags
-      return result
+      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+      if (apiKey) {
+        const today = new Date().toISOString().split('T')[0]
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 300,
+            messages: [{
+              role: 'user',
+              content: `Classifica esta tarefa. Responde APENAS com JSON válido, sem markdown.
+
+Tarefa: "${cleaned || text}"
+Data de hoje: ${today}
+
+Projetos disponíveis:
+${projects.map((p) => `- ${p.id}: ${p.label}${p.keywords?.length ? ` (${p.keywords.join(', ')})` : ''}`).join('\n')}
+
+${overridePriority ? `Prioridade forçada: ${overridePriority}` : ''}
+${overrideProjects.length > 0 ? `Projecto forçado: ${overrideProjects.join(', ')}` : ''}
+
+Devolve:
+{
+  "text": "versão limpa em imperativo, máx 80 chars",
+  "projects": ["id_do_projeto"],
+  "priority": "alta" | "média" | "baixa",
+  "reason": "frase curta (máx 8 palavras)",
+  "type": "tarefa" | "ideia",
+  "tags": [],
+  "due_date": "YYYY-MM-DD ou null"
+}`,
+            }],
+          }),
+        })
+        if (response.ok) {
+          const data = await response.json()
+          const parsed: ClassifyResult = JSON.parse(data.content[0].text.trim())
+          if (overridePriority) parsed.priority = overridePriority
+          if (overrideProjects.length > 0) parsed.projects = overrideProjects
+          if (tags.length > 0) parsed.tags = [...(parsed.tags ?? []), ...tags]
+          return parsed
+        }
+      }
+    } catch (e) {
+      console.warn('Claude classify failed, falling back to local', e)
     } finally {
       setLoading(false)
     }
+
+    const result = classifyLocally(cleaned || text, projects, overrideProjects, overridePriority)
+    result.tags = [...(result.tags ?? []), ...tags]
+    return result
   }
 
   return { classify, loading }

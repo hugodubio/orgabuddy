@@ -72,6 +72,17 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
     return map
   }, [tasks])
 
+  const activeProjectContext = useMemo(() => {
+    if (!activeProject) return null
+    const ptasks = tasks.filter((t) => t.projects.includes(activeProject) && !t.done)
+    if (ptasks.length === 0) return null
+    const lastTs = Math.max(...ptasks.map((t) => new Date(t.updated_at).getTime()))
+    const diffDays = Math.floor((Date.now() - lastTs) / 86400000)
+    const lastStr = diffDays === 0 ? 'hoje' : diffDays === 1 ? 'ontem' : `há ${diffDays} dias`
+    const next = ptasks.find((t) => t.priority === 'alta') ?? ptasks[0]
+    return { count: ptasks.length, lastStr, next }
+  }, [tasks, activeProject])
+
   const countFor = (id: string) => pendingByProject[id] ?? 0
   const totalPending = tasks.filter((t) => !t.done).length
 
@@ -152,6 +163,20 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
           background: syncMsg.includes('Erro') ? '#2d1a1a' : '#162a22'
         }}>
           {syncMsg}
+        </div>
+      )}
+
+      {activeProjectContext && (
+        <div className="mx-3 mt-2 mb-1 rounded-md px-2.5 py-2" style={{ background: '#1a1713', border: '1px solid #2a2520' }}>
+          <p className="text-[10px] leading-relaxed" style={{ color: '#7a7068' }}>
+            <span style={{ color: '#a09080' }}>{activeProjectContext.count} tarefa{activeProjectContext.count !== 1 ? 's' : ''}</span>
+            {' · '}última actividade {activeProjectContext.lastStr}
+          </p>
+          {activeProjectContext.next && (
+            <p className="text-[11px] mt-1 truncate" style={{ color: '#c8bfb4' }}>
+              → {activeProjectContext.next.text}
+            </p>
+          )}
         </div>
       )}
 

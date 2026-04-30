@@ -59,7 +59,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     const { data } = await supabase
       .from('ob_tasks')
       .select('*')
-      .eq('user_id', userId)
+      .or(`user_id.eq.${userId},user_id.is.null`)
       .or(`done.eq.false,updated_at.gte.${cutoff}`)
 
     const sorted = (data ?? []).sort(

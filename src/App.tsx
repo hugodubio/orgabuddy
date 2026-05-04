@@ -269,12 +269,10 @@ export default function App() {
 
             {displayMode === 'list' && (
               <>
-                {!activeProject && !activeTag && (
-                  <div className="mb-8">
-                    <DailyBriefing tasks={userTasks} />
-                    <CaptureBar />
-                  </div>
-                )}
+                <div className="mb-8">
+                  {!activeProject && !activeTag && <DailyBriefing tasks={userTasks} />}
+                  <CaptureBar defaultProject={activeProject ?? undefined} />
+                </div>
                 {loading ? (
                   <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
                 ) : (

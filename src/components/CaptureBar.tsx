@@ -21,7 +21,7 @@ const SpeechRecognitionAPI: (new () => SpeechRecognitionInstance) | null =
     ((window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance }).SpeechRecognition ||
      (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).webkitSpeechRecognition)) || null
 
-export default function CaptureBar() {
+export default function CaptureBar({ defaultProject }: { defaultProject?: string }) {
   const [input, setInput] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [linkQuery, setLinkQuery] = useState<string | null>(null)
@@ -97,11 +97,15 @@ export default function CaptureBar() {
         return
       }
 
+      const finalProjects = defaultProject && !classified.projects.includes(defaultProject)
+        ? [defaultProject, ...classified.projects]
+        : classified.projects
+
       const { data, error: err } = await supabase
         .from('ob_tasks')
         .insert({
           text: classified.text,
-          projects: classified.projects,
+          projects: finalProjects,
           priority: classified.priority,
           reason: classified.reason,
           type: classified.type,
@@ -196,7 +200,7 @@ export default function CaptureBar() {
             if (e.key === 'Enter' && !linkQuery) submit()
             if (e.key === 'Escape') setLinkQuery(null)
           }}
-          placeholder={mode === 'note' ? 'escreve a nota…' : 'o que tens na cabeça?'}
+          placeholder={mode === 'note' ? 'escreve a nota…' : defaultProject ? `nova tarefa em ${defaultProject}…` : 'o que tens na cabeça?'}
           disabled={loading}
           className="capture-input w-full rounded-xl px-4 py-4 text-[15px] outline-none transition-all pr-20 disabled:opacity-60"
           style={{

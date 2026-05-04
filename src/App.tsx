@@ -163,7 +163,7 @@ export default function App() {
     if (sessionStorage.getItem('ob_notified')) return
 
     const today = new Date().toISOString().split('T')[0]
-    const userTasks = tasks.filter((t) => t.user_id === userId || (!t.user_id && userId === 'hugo'))
+    const userTasks = tasks.filter((t) => (t.user_id === userId || (!t.user_id && userId === 'hugo')) && t.source !== 'mystic_event')
     const urgent = userTasks.filter((t) => !t.done && (
       t.priority === 'alta' ||
       (t.due_date && t.due_date <= today)
@@ -204,11 +204,12 @@ export default function App() {
   const MYSTIC_SOURCES = ['mystic_event', 'mystic_task']
 
   // Filter by user — legacy tasks (null user_id) only visible to hugo
-  const userTasks = tasks.filter((t) => t.user_id === userId || (!t.user_id && userId === 'hugo'))
+  const userTasks = tasks.filter((t) => (t.user_id === userId || (!t.user_id && userId === 'hugo')) && t.source !== 'mystic_event')
 
   const today = new Date().toISOString().split('T')[0]
 
   const visible = userTasks.filter((t) => {
+    if (t.source === 'mystic_event') return false
     if (activeProject) return t.projects.includes(activeProject)
     if (activeTag) return (t.tags ?? []).includes(activeTag)
     return true

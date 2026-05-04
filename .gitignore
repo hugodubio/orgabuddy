@@ -1,0 +1,11 @@
+.next
+node_modules
+.env
+.env.local
+coverage
+dist
+*.log
+prisma/dev.db
+orgabuddy.db
+gmail_token.json
+.vercel

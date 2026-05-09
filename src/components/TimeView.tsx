@@ -185,6 +185,7 @@ export default function TimeView() {
   const [manualProject, setManualProject] = useState('')
   const [manualDesc, setManualDesc] = useState('')
   const [pendingEntry, setPendingEntry] = useState<PendingEntry | null>(null)
+  const [savedMsg, setSavedMsg] = useState<string | null>(null)
   const elapsed = useElapsed(timerStart)
 
   const today = new Date().toISOString().split('T')[0]
@@ -232,7 +233,14 @@ export default function TimeView() {
     const endedAt = `${manualDate}T${manualEnd}:00`
     await addManual(startedAt, endedAt, manualProject || null, manualDesc)
     setManualStart(''); setManualEnd(''); setManualDesc(''); setManualProject('')
+    setManualDate(new Date().toISOString().split('T')[0])
     setShowManual(false)
+    if (manualDate !== today) {
+      const d = new Date(manualDate + 'T00:00:00')
+      const label = d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })
+      setSavedMsg(`Bloco guardado para ${label}`)
+      setTimeout(() => setSavedMsg(null), 3000)
+    }
     fetchEntries(today, today + 'T23:59:59')
   }
 
@@ -319,14 +327,21 @@ export default function TimeView() {
                     className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
                     style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
                 </div>
-                <button onClick={handleStartStop}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold self-start transition-colors"
-                  style={{ background: 'var(--amber)', color: '#fff' }}>
-                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 14 14">
-                    <path d="M3 2l9 5-9 5V2z"/>
-                  </svg>
-                  Iniciar timer
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleStartStop}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-colors"
+                    style={{ background: 'var(--amber)', color: '#fff' }}>
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 14 14">
+                      <path d="M3 2l9 5-9 5V2z"/>
+                    </svg>
+                    Iniciar timer
+                  </button>
+                  <button onClick={() => setShowManual(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-colors"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>
+                    + Bloco manual
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -357,13 +372,12 @@ export default function TimeView() {
 
           {/* Manual entry */}
           <div className="mt-4">
-            {!showManual ? (
-              <button onClick={() => setShowManual(true)}
-                className="text-[12px] flex items-center gap-1.5 transition-opacity opacity-50 hover:opacity-80"
-                style={{ color: 'var(--text-2)' }}>
-                <span>+</span> Adicionar manual
-              </button>
-            ) : (
+            {savedMsg && (
+              <p className="text-[12px] mb-2 px-3 py-2 rounded-lg" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                ✓ {savedMsg}
+              </p>
+            )}
+            {showManual && (
               <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                 <div className="flex gap-2">
                   <input type="date" value={manualDate} onChange={e => setManualDate(e.target.value)}
@@ -401,6 +415,8 @@ export default function TimeView() {
           </div>
         </>
       )}
+
+
 
       {tab === 'resumo' && <SummaryView />}
     </div>

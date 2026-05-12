@@ -1,58 +1,263 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTasksStore } from '../store/tasks'
 import { useProjectsStore } from '../store/projects'
 import { useAuthStore } from '../store/auth'
+import { useEventsStore } from '../store/events'
 import { supabase } from '../lib/supabase'
-import type { Task } from '../types'
+import type { Task, CalendarEvent, RecurrenceRule } from '../types'
 
-const MONTHS_PT = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro',
-]
+const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const DAYS_PT = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']
 
-function parseEventDate(task: Task): string | null {
-  const match = task.reason?.match(/\d{4}-\d{2}-\d{2}/)
-  return match ? match[0] : null
+function pad(n: number) { return String(n).padStart(2, '0') }
+function toDateStr(year: number, month: number, day: number) {
+  return `${year}-${pad(month + 1)}-${pad(day)}`
 }
 
-function parseEventTime(task: Task): string | null {
-  const match = task.reason?.match(/(\d{2}:\d{2})/)
-  return match ? match[1] : null
-}
-
-function buildGrid(year: number, month: number): (number | null)[] {
+function buildWeeks(year: number, month: number): ({ day: number; date: string } | null)[][] {
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const startOffset = (firstDay + 6) % 7 // Monday = 0
-  const days: (number | null)[] = []
-  for (let i = 0; i < startOffset; i++) days.push(null)
-  for (let i = 1; i <= daysInMonth; i++) days.push(i)
-  while (days.length % 7 !== 0) days.push(null)
-  return days
+  const startOffset = (firstDay + 6) % 7
+  const cells: ({ day: number; date: string } | null)[] = []
+  for (let i = 0; i < startOffset; i++) cells.push(null)
+  for (let i = 1; i <= daysInMonth; i++) cells.push({ day: i, date: toDateStr(year, month, i) })
+  while (cells.length % 7 !== 0) cells.push(null)
+  const weeks: ({ day: number; date: string } | null)[][] = []
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+  return weeks
 }
 
-function pad(n: number) {
-  return String(n).padStart(2, '0')
+function minDate(a: string, b: string) { return a < b ? a : b }
+function maxDate(a: string, b: string) { return a > b ? a : b }
+
+// ─── Bar layout algorithm ───────────────────────────────────────────────────
+
+interface BarLayout {
+  event: CalendarEvent
+  startCol: number
+  colSpan: number
+  lane: number
+  isStart: boolean
+  isEnd: boolean
+}
+
+function computeBars(
+  week: ({ day: number; date: string } | null)[],
+  events: CalendarEvent[]
+): BarLayout[] {
+  const weekDates = week.map(d => d?.date ?? null)
+  const defined = weekDates.filter(Boolean) as string[]
+  if (!defined.length) return []
+  const weekStart = defined[0]
+  const weekEnd = defined[defined.length - 1]
+
+  const overlapping = events
+    .filter(e => e.start_date <= weekEnd && e.end_date >= weekStart)
+    .slice()
+    .sort((a, b) => {
+      const durA = new Date(a.end_date).getTime() - new Date(a.start_date).getTime()
+      const durB = new Date(b.end_date).getTime() - new Date(b.start_date).getTime()
+      return durB !== durA ? durB - durA : a.start_date.localeCompare(b.start_date)
+    })
+
+  const lanes: { startCol: number; endCol: number }[][] = []
+  const bars: BarLayout[] = []
+
+  for (const event of overlapping) {
+    let startCol = 0
+    let endCol = 6
+    for (let i = 0; i < 7; i++) {
+      if (weekDates[i] && weekDates[i]! >= event.start_date) { startCol = i; break }
+    }
+    for (let i = 6; i >= 0; i--) {
+      if (weekDates[i] && weekDates[i]! <= event.end_date) { endCol = i; break }
+    }
+
+    let lane = 0
+    while (true) {
+      if (!lanes[lane]) { lanes[lane] = []; break }
+      const conflict = lanes[lane].some(b => !(endCol < b.startCol || startCol > b.endCol))
+      if (!conflict) break
+      lane++
+      if (lane > 4) break // max 5 lanes
+    }
+    if (!lanes[lane]) lanes[lane] = []
+    lanes[lane].push({ startCol, endCol })
+
+    bars.push({ event, startCol, colSpan: endCol - startCol + 1, lane, isStart: event.start_date >= weekStart, isEnd: event.end_date <= weekEnd })
+  }
+
+  return bars
+}
+
+// ─── EventBar ───────────────────────────────────────────────────────────────
+
+function EventBar({ bar, projects, onClick }: { bar: BarLayout; projects: { id: string; label: string; color_bg: string; color_text: string }[]; onClick: () => void }) {
+  const proj = projects.find((p: { id: string }) => p.id === bar.event.project_id)
+  const left = `calc(${(bar.startCol / 7) * 100}% + 2px)`
+  const width = `calc(${(bar.colSpan / 7) * 100}% - 4px)`
+  const top = 26 + bar.lane * 22
+
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); onClick() }}
+      className="absolute flex items-center px-1.5 text-[10px] font-medium truncate cursor-pointer transition-opacity hover:opacity-80 z-10 pointer-events-auto"
+      style={{
+        left, width, top,
+        height: 18,
+        background: proj?.color_bg ?? 'var(--amber)',
+        color: proj?.color_text ?? '#fff',
+        borderRadius: bar.isStart && bar.isEnd ? 4 : bar.isStart ? '4px 0 0 4px' : bar.isEnd ? '0 4px 4px 0' : 0,
+        borderLeft: !bar.isStart ? 'none' : undefined,
+        borderRight: !bar.isEnd ? 'none' : undefined,
+      }}
+    >
+      {bar.isStart && bar.event.title}
+    </div>
+  )
+}
+
+// ─── CreateEventForm ─────────────────────────────────────────────────────────
+
+function CreateEventForm({ startDate, endDate, onClose, onSaved }: {
+  startDate: string; endDate: string; onClose: () => void; onSaved: () => void
+}) {
+  const { projects } = useProjectsStore()
+  const { createEvent } = useEventsStore()
+  const [title, setTitle] = useState('')
+  const [start, setStart] = useState(startDate)
+  const [end, setEnd] = useState(endDate)
+  const [projectId, setProjectId] = useState('')
+  const [location, setLocation] = useState('')
+  const [notes, setNotes] = useState('')
+  const [recurrent, setRecurrent] = useState(false)
+  const [rule, setRule] = useState<RecurrenceRule>('monthly')
+  const [recEnd, setRecEnd] = useState('')
+  const [createTask, setCreateTask] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const submit = async () => {
+    if (!title.trim() || saving) return
+    setSaving(true)
+    await createEvent({
+      title: title.trim(),
+      start_date: start,
+      end_date: end < start ? start : end,
+      project_id: projectId || null,
+      location: location || null,
+      notes: notes || null,
+      recurrence_rule: recurrent ? rule : null,
+      recurrence_end: recurrent && recEnd ? recEnd : null,
+      create_task: createTask,
+    })
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  return (
+    <div className="rounded-xl p-4 flex flex-col gap-3 mt-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+      <p className="text-[11px] font-semibold" style={{ color: 'var(--text-3)' }}>Novo evento</p>
+
+      <input autoFocus value={title} onChange={e => setTitle(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onClose() }}
+        placeholder="Título"
+        className="px-3 py-2 rounded-lg text-[13px] outline-none"
+        style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+
+      <div className="flex gap-2">
+        <div className="flex flex-col gap-1 flex-1">
+          <label className="text-[10px]" style={{ color: 'var(--text-3)' }}>Início</label>
+          <input type="date" value={start} onChange={e => setStart(e.target.value)}
+            className="px-3 py-2 rounded-lg text-[13px] outline-none"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+        </div>
+        <div className="flex flex-col gap-1 flex-1">
+          <label className="text-[10px]" style={{ color: 'var(--text-3)' }}>Fim</label>
+          <input type="date" value={end} onChange={e => setEnd(e.target.value)}
+            className="px-3 py-2 rounded-lg text-[13px] outline-none"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <select value={projectId} onChange={e => setProjectId(e.target.value)}
+          className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
+          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }}>
+          <option value="">Sem projeto</option>
+          {projects.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+        </select>
+        <input value={location} onChange={e => setLocation(e.target.value)}
+          placeholder="Local (opcional)"
+          className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
+          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+      </div>
+
+      <input value={notes} onChange={e => setNotes(e.target.value)}
+        placeholder="Notas (opcional)"
+        className="px-3 py-2 rounded-lg text-[13px] outline-none"
+        style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+
+      {/* Recorrente */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" checked={recurrent} onChange={e => setRecurrent(e.target.checked)} className="accent-[var(--amber)]" />
+        <span className="text-[12px]" style={{ color: 'var(--text-2)' }}>Recorrente</span>
+      </label>
+      {recurrent && (
+        <div className="flex gap-2">
+          <select value={rule} onChange={e => setRule(e.target.value as RecurrenceRule)}
+            className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }}>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensal</option>
+            <option value="first-week-monthly">Primeira semana de cada mês</option>
+          </select>
+          <input type="date" value={recEnd} onChange={e => setRecEnd(e.target.value)}
+            placeholder="Até quando"
+            className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+        </div>
+      )}
+
+      {/* Criar tarefa */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" checked={createTask} onChange={e => setCreateTask(e.target.checked)} className="accent-[var(--amber)]" />
+        <span className="text-[12px]" style={{ color: 'var(--text-2)' }}>Criar tarefa associada</span>
+      </label>
+
+      <div className="flex gap-2">
+        <button onClick={submit} disabled={!title.trim() || saving}
+          className="px-4 py-2 rounded-lg text-[13px] font-semibold disabled:opacity-40"
+          style={{ background: 'var(--amber)', color: '#fff' }}>
+          {saving ? '…' : 'Guardar'}
+        </button>
+        <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px]"
+          style={{ background: 'var(--border)', color: 'var(--text-2)' }}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── EditEventForm (ob_tasks — legado) ──────────────────────────────────────
+
+function parseEventTime(task: Task) {
+  return task.reason?.match(/(\d{2}:\d{2})/)?.[1] ?? null
 }
 
 function sourceDot(source: Task['source']) {
-  if (source === 'mystic_event') return 'bg-purple-400'
-  if (source === 'mystic_task') return 'bg-indigo-400'
-  return 'bg-[#1a1a1a]'
+  if (source === 'mystic_event') return '#a78bfa'
+  if (source === 'mystic_task') return '#818cf8'
+  return 'var(--text-1)'
 }
 
-interface EditEventFormProps {
-  task: Task
-  onClose: () => void
-  onSaved: () => void
-  onDelete: () => void
-}
-
-function EditEventForm({ task, onClose, onSaved, onDelete }: EditEventFormProps) {
+function EditEventForm({ task, onClose, onSaved, onDelete }: {
+  task: Task; onClose: () => void; onSaved: () => void; onDelete: () => void
+}) {
   const [title, setTitle] = useState(task.text.replace(/^🎵\s*/, ''))
   const [time, setTime] = useState(parseEventTime(task) ?? '')
-  const [selectedProject, setSelectedProject] = useState<string>(task.projects[0] ?? '')
+  const [proj, setProj] = useState(task.projects[0] ?? '')
   const [saving, setSaving] = useState(false)
   const { projects } = useProjectsStore()
 
@@ -60,52 +265,28 @@ function EditEventForm({ task, onClose, onSaved, onDelete }: EditEventFormProps)
     const text = title.trim()
     if (!text || saving) return
     setSaving(true)
-    const date = task.due_date ?? parseEventDate(task) ?? ''
+    const date = task.due_date ?? ''
     const reason = time ? `${date} às ${time}` : date
-    await supabase.from('ob_tasks').update({
-      text,
-      reason,
-      projects: selectedProject ? [selectedProject] : [],
-    }).eq('id', task.id)
+    await supabase.from('ob_tasks').update({ text, reason, projects: proj ? [proj] : [] }).eq('id', task.id)
     setSaving(false)
-    onSaved()
-    onClose()
-  }
-
-  const handleDelete = async () => {
-    await supabase.from('ob_tasks').delete().eq('id', task.id)
-    onDelete()
-    onClose()
+    onSaved(); onClose()
   }
 
   return (
     <div className="mt-2 p-3 rounded-lg" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
       <p className="text-[11px] mb-2" style={{ color: 'var(--text-3)' }}>Editar evento</p>
-      <input
-        autoFocus
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onClose() }}
+      <input autoFocus value={title} onChange={e => setTitle(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onClose() }}
         className="w-full rounded px-2 py-1.5 text-[13px] outline-none mb-2"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
-      />
-      <input
-        type="time"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+      <input type="time" value={time} onChange={e => setTime(e.target.value)}
         className="w-full rounded px-2 py-1.5 text-[13px] outline-none mb-2"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: time ? 'var(--text-1)' : 'var(--text-3)' }}
-      />
-      <select
-        value={selectedProject}
-        onChange={(e) => setSelectedProject(e.target.value)}
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }} />
+      <select value={proj} onChange={e => setProj(e.target.value)}
         className="w-full rounded px-2 py-1.5 text-[13px] outline-none mb-3"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: selectedProject ? 'var(--text-1)' : 'var(--text-3)' }}
-      >
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}>
         <option value="">Sem projeto</option>
-        {projects.map((p) => (
-          <option key={p.id} value={p.id}>{p.label}</option>
-        ))}
+        {useProjectsStore.getState().projects.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
       </select>
       <div className="flex items-center gap-2">
         <button onClick={submit} disabled={!title.trim() || saving}
@@ -113,319 +294,313 @@ function EditEventForm({ task, onClose, onSaved, onDelete }: EditEventFormProps)
           style={{ background: 'var(--amber)' }}>
           {saving ? '…' : 'Guardar'}
         </button>
-        <button onClick={onClose} className="px-2 py-1 text-[12px]" style={{ color: 'var(--text-3)' }}>
-          Cancelar
-        </button>
-        <button onClick={handleDelete} className="ml-auto px-2 py-1 text-[12px]" style={{ color: '#c8402e' }}>
-          Apagar
-        </button>
+        <button onClick={onClose} className="px-2 py-1 text-[12px]" style={{ color: 'var(--text-3)' }}>Cancelar</button>
+        <button onClick={async () => { await supabase.from('ob_tasks').delete().eq('id', task.id); onDelete(); onClose() }}
+          className="ml-auto px-2 py-1 text-[12px]" style={{ color: '#c8402e' }}>Apagar</button>
       </div>
     </div>
   )
 }
 
-interface AddEventFormProps {
-  date: string
-  onClose: () => void
-  onSaved: () => void
-}
+// ─── DayPanel ────────────────────────────────────────────────────────────────
 
-function AddEventForm({ date, onClose, onSaved }: AddEventFormProps) {
-  const [title, setTitle] = useState('')
-  const [time, setTime] = useState('')
-  const [selectedProject, setSelectedProject] = useState<string>('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+function DayPanel({ dateStr, year, month, calEvents, taskEvents, onClose, onRefresh }: {
+  dateStr: string; year: number; month: number
+  calEvents: CalendarEvent[]; taskEvents: Task[]
+  onClose: () => void; onRefresh: () => void
+}) {
+  const [showCreate, setShowCreate] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
+  const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
+  const { deleteEvent } = useEventsStore()
   const { projects } = useProjectsStore()
-  const { userId } = useAuthStore()
-
-  const submit = async () => {
-    const text = title.trim()
-    if (!text || saving) return
-    setSaving(true)
-    setError(null)
-    const reason = time ? `${date} às ${time}` : date
-    const { error: err } = await supabase.from('ob_tasks').insert({
-      text,
-      projects: selectedProject ? [selectedProject] : [],
-      priority: 'média',
-      reason,
-      type: 'tarefa',
-      source: 'calendar',
-      tags: [],
-      done: false,
-      links: [],
-      due_date: date,
-      user_id: userId ?? 'hugo',
-    })
-    setSaving(false)
-    if (err) { setError('Erro ao guardar evento'); return }
-    onSaved()
-    onClose()
-  }
+  const day = parseInt(dateStr.split('-')[2])
 
   return (
-    <div className="mt-3 border-t border-[#ebebea] pt-3">
-      <p className="text-[11px] text-[#aaa] mb-2">Novo evento</p>
-      <input
-        autoFocus
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') submit()
-          if (e.key === 'Escape') onClose()
-        }}
-        placeholder="Título do evento"
-        className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none placeholder:text-[#ccc] mb-2"
-      />
-      <input
-        type="time"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-        className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none mb-2"
-        style={{ color: time ? '#1a1a1a' : '#aaa' }}
-      />
-      <select
-        value={selectedProject}
-        onChange={(e) => setSelectedProject(e.target.value)}
-        className="w-full bg-[#f7f7f5] border border-[#d0d0ce] rounded px-2 py-1.5 text-[13px] outline-none mb-2"
-        style={{ color: selectedProject ? '#1a1510' : '#aaa' }}
-      >
-        <option value="">Sem projeto</option>
-        {projects.map((p) => (
-          <option key={p.id} value={p.id}>{p.label}</option>
-        ))}
-      </select>
-      {error && <p className="text-[11px] text-red-400 mb-1">{error}</p>}
-      <div className="flex gap-2">
-        <button
-          onClick={submit}
-          disabled={!title.trim() || saving}
-          className="px-3 py-1 text-[12px] bg-[#1a1a1a] text-white rounded disabled:opacity-40"
-        >
-          {saving ? '…' : 'Guardar'}
-        </button>
-        <button onClick={onClose} className="px-2 py-1 text-[12px] text-[#aaa] hover:text-[#555]">
-          Cancelar
-        </button>
+    <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[14px] font-semibold" style={{ color: 'var(--text-1)' }}>
+          {day} de {MONTHS_PT[month]}
+        </p>
+        <div className="flex gap-2">
+          <button onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1 px-2.5 py-1 text-[12px] rounded-lg font-medium"
+            style={{ background: 'var(--amber)', color: '#fff' }}>
+            + Evento
+          </button>
+          <button onClick={onClose} className="p-1 text-[12px]" style={{ color: 'var(--text-3)' }}>✕</button>
+        </div>
       </div>
+
+      {/* ob_events for this day */}
+      {calEvents.map(e => {
+        const proj = projects.find(p => p.id === e.project_id)
+        return (
+          <div key={e.id} className="flex items-start gap-2 py-2 border-b group"
+            style={{ borderColor: 'var(--border)' }}>
+            {proj && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded shrink-0 mt-0.5"
+                style={{ background: proj.color_bg, color: proj.color_text }}>{proj.label}</span>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px]" style={{ color: 'var(--text-1)' }}>{e.title}</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                {e.start_date} → {e.end_date}
+                {e.location ? ` · ${e.location}` : ''}
+                {e.recurrence_rule ? ' · ↻' : ''}
+              </p>
+            </div>
+            <button
+              onClick={() => setDeletingEventId(deletingEventId === e.id ? null : e.id)}
+              className="opacity-0 group-hover:opacity-40 hover:!opacity-80 text-[11px]"
+              style={{ color: 'var(--text-2)' }}>✕</button>
+            {deletingEventId === e.id && (
+              <div className="absolute mt-6 right-4 flex gap-2 p-2 rounded-lg shadow-md z-20"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <span className="text-[12px]" style={{ color: 'var(--text-2)' }}>Apagar?</span>
+                <button onClick={async () => { await deleteEvent(e.id); setDeletingEventId(null); onRefresh() }}
+                  className="text-[12px] font-semibold" style={{ color: '#c8402e' }}>Sim</button>
+                <button onClick={() => setDeletingEventId(null)} className="text-[12px]" style={{ color: 'var(--text-3)' }}>Não</button>
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* ob_tasks for this day */}
+      {taskEvents.map(t => (
+        <div key={t.id}>
+          <div className="flex items-start gap-2 py-2 border-b group cursor-pointer"
+            style={{ borderColor: 'var(--border)' }}
+            onClick={() => t.source === 'calendar' && setEditingTaskId(editingTaskId === t.id ? null : t.id)}>
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ background: sourceDot(t.source) }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px]" style={{ color: 'var(--text-1)' }}>{t.text.replace(/^🎵\s*/, '')}</p>
+              {parseEventTime(t) && <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>{parseEventTime(t)}</p>}
+            </div>
+          </div>
+          {editingTaskId === t.id && (
+            <EditEventForm task={t} onClose={() => setEditingTaskId(null)} onSaved={onRefresh} onDelete={onRefresh} />
+          )}
+        </div>
+      ))}
+
+      {calEvents.length === 0 && taskEvents.length === 0 && !showCreate && (
+        <p className="text-[13px] py-2" style={{ color: 'var(--text-3)' }}>Nenhum evento. Clica em + Evento.</p>
+      )}
+
+      {showCreate && (
+        <CreateEventForm
+          startDate={dateStr}
+          endDate={dateStr}
+          onClose={() => setShowCreate(false)}
+          onSaved={() => { onRefresh(); setShowCreate(false) }}
+        />
+      )}
     </div>
   )
 }
 
+// ─── CalendarView ────────────────────────────────────────────────────────────
+
 export default function CalendarView() {
-  const { tasks, fetchTasks } = useTasksStore()
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [addingEvent, setAddingEvent] = useState(false)
-  const [editingEventId, setEditingEventId] = useState<number | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [dragStart, setDragStart] = useState<string | null>(null)
+  const [dragEnd, setDragEnd] = useState<string | null>(null)
+  const [showRangeForm, setShowRangeForm] = useState(false)
+  const isDragging = useRef(false)
 
-  const calendarTasks = tasks.filter(
-    (t) => t.source === 'calendar' || t.source === 'mystic_event' || t.source === 'mystic_task'
+  const { tasks, fetchTasks } = useTasksStore()
+  const { projects } = useProjectsStore()
+  const { events, fetchEvents } = useEventsStore()
+
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+
+  const weeks = useMemo(() => buildWeeks(year, month), [year, month])
+
+  const monthStart = `${year}-${pad(month + 1)}-01`
+  const monthEnd = `${year}-${pad(month + 1)}-${new Date(year, month + 1, 0).getDate()}`
+
+  useEffect(() => {
+    fetchTasks()
+    fetchEvents(monthStart, monthEnd)
+  }, [year, month])
+
+  useEffect(() => {
+    const onUp = () => {
+      if (isDragging.current && dragStart && dragEnd && dragStart !== dragEnd) {
+        setShowRangeForm(true)
+      }
+      isDragging.current = false
+    }
+    document.addEventListener('mouseup', onUp)
+    return () => document.removeEventListener('mouseup', onUp)
+  }, [dragStart, dragEnd])
+
+  const calendarTasks = tasks.filter(t =>
+    ['calendar', 'mystic_event', 'mystic_task'].includes(t.source) && t.due_date
   )
 
-  const eventsByDate = calendarTasks.reduce<Record<string, Task[]>>((acc, t) => {
-    const date = parseEventDate(t)
-    if (date) {
-      if (!acc[date]) acc[date] = []
-      acc[date].push(t)
+  const tasksByDate = useMemo(() => {
+    const map: Record<string, Task[]> = {}
+    for (const t of calendarTasks) {
+      const d = t.due_date!
+      if (!map[d]) map[d] = []
+      map[d].push(t)
     }
-    return acc
-  }, {})
+    return map
+  }, [calendarTasks])
 
-  const grid = buildGrid(year, month)
+  const dragMin = dragStart && dragEnd ? minDate(dragStart, dragEnd) : null
+  const dragMax = dragStart && dragEnd ? maxDate(dragStart, dragEnd) : null
+
+  const isInDrag = (date: string) => !!dragMin && !!dragMax && date >= dragMin && date <= dragMax
 
   const prevMonth = () => {
+    setSelectedDate(null)
     if (month === 0) { setYear(y => y - 1); setMonth(11) }
     else setMonth(m => m - 1)
-    setSelectedDay(null)
   }
   const nextMonth = () => {
+    setSelectedDate(null)
     if (month === 11) { setYear(y => y + 1); setMonth(0) }
     else setMonth(m => m + 1)
-    setSelectedDay(null)
   }
 
-  const isToday = (day: number) =>
-    day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
+  const handleDayMouseDown = (date: string) => {
+    isDragging.current = true
+    setDragStart(date)
+    setDragEnd(date)
+    setShowRangeForm(false)
+    setSelectedDate(null)
+  }
 
-  const selectedDateStr = selectedDay
-    ? `${year}-${pad(month + 1)}-${pad(selectedDay)}`
-    : null
+  const handleDayMouseEnter = (date: string) => {
+    if (isDragging.current) setDragEnd(date)
+  }
 
-  const selectedEvents = selectedDateStr
-    ? (eventsByDate[selectedDateStr] ?? []).slice().sort((a, b) => {
-        const ta = parseEventTime(a) ?? '99:99'
-        const tb = parseEventTime(b) ?? '99:99'
-        return ta.localeCompare(tb)
-      })
-    : []
+  const handleDayClick = (date: string) => {
+    if (dragStart !== dragEnd) return // was a drag, not a click
+    setSelectedDate(selectedDate === date ? null : date)
+    setDragStart(null); setDragEnd(null)
+  }
+
+  const selectedDayEvents = selectedDate ? (events.filter(e => e.start_date <= selectedDate && e.end_date >= selectedDate)) : []
+  const selectedTaskEvents = selectedDate ? (tasksByDate[selectedDate] ?? []) : []
 
   return (
-    <div className="max-w-3xl mx-auto w-full">
+    <div className="max-w-3xl mx-auto w-full select-none">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <h1 className="text-[22px] font-semibold text-[#1a1a1a] flex-1">
+        <h1 className="text-[22px] font-semibold flex-1" style={{ color: 'var(--text-1)' }}>
           {MONTHS_PT[month]} {year}
         </h1>
-        <button onClick={prevMonth} className="p-1.5 rounded hover:bg-[#f0f0ee] text-[#666]">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
-            <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+        <button onClick={prevMonth} className="p-1.5 rounded transition-colors hover:bg-[#f0f0ee]" style={{ color: 'var(--text-3)' }}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
-        <button onClick={nextMonth} className="p-1.5 rounded hover:bg-[#f0f0ee] text-[#666]">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
-            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+        <button onClick={nextMonth} className="p-1.5 rounded transition-colors hover:bg-[#f0f0ee]" style={{ color: 'var(--text-3)' }}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
       </div>
 
-      {/* Grid */}
+      {/* Day labels */}
       <div className="grid grid-cols-7 mb-1">
-        {DAYS_PT.map((d) => (
-          <div key={d} className="text-center text-[11px] uppercase tracking-widest text-[#aaa] pb-2">
-            {d}
-          </div>
+        {DAYS_PT.map(d => (
+          <div key={d} className="text-center text-[11px] uppercase tracking-widest pb-2" style={{ color: 'var(--text-3)' }}>{d}</div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-[#ebebea] rounded-lg overflow-hidden border border-[#ebebea]">
-        {grid.map((day, i) => {
-          const dateStr = day ? `${year}-${pad(month + 1)}-${pad(day)}` : null
-          const dayEvents = dateStr ? (eventsByDate[dateStr] ?? []) : []
-          const isSelected = day === selectedDay
+      {/* Week rows */}
+      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+        {weeks.map((week, wi) => {
+          const bars = computeBars(week, events)
+          const maxLane = bars.length ? Math.max(...bars.map(b => b.lane)) : -1
+          const barsHeight = maxLane >= 0 ? (maxLane + 1) * 22 + 4 : 0
+          const rowHeight = Math.max(64, 28 + barsHeight)
 
           return (
-            <div
-              key={i}
-              onClick={() => {
-                if (!day) return
-                setSelectedDay(day === selectedDay ? null : day)
-                setAddingEvent(false)
-              }}
-              className={`min-h-[72px] p-1.5 bg-white cursor-pointer transition-colors ${
-                day ? 'hover:bg-[#fafafa]' : 'bg-[#f7f7f5] cursor-default'
-              } ${isSelected ? 'ring-2 ring-inset ring-[#1a1a1a]' : ''}`}
-            >
-              {day && (
-                <>
-                  <span
-                    className={`text-[12px] font-medium inline-flex w-5 h-5 items-center justify-center rounded-full ${
-                      isToday(day)
-                        ? 'bg-[#1a1a1a] text-white'
-                        : 'text-[#555]'
-                    }`}
+            <div key={wi} className="relative grid grid-cols-7"
+              style={{ borderBottom: wi < weeks.length - 1 ? '1px solid var(--border)' : 'none', height: rowHeight }}>
+
+              {/* Day cells */}
+              {week.map((d, di) => {
+                const isToday = d?.date === todayStr
+                const isSelected = d?.date === selectedDate
+                const inDrag = d?.date ? isInDrag(d.date) : false
+
+                return (
+                  <div key={di}
+                    className="h-full cursor-pointer transition-colors"
+                    style={{
+                      borderRight: di < 6 ? '1px solid var(--border)' : 'none',
+                      background: isSelected ? '#fef3e2' : inDrag ? '#fff7ed' : d ? 'var(--surface)' : '#f9f8f6',
+                    }}
+                    onMouseDown={() => d && handleDayMouseDown(d.date)}
+                    onMouseEnter={() => d && handleDayMouseEnter(d.date)}
+                    onMouseUp={() => d && handleDayClick(d.date)}
                   >
-                    {day}
-                  </span>
-                  <div className="mt-1 space-y-0.5">
-                    {dayEvents.slice(0, 3).map((t) => (
-                      <div
-                        key={t.id}
-                        className="flex items-center gap-1 truncate"
-                        title={t.text}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sourceDot(t.source)}`} />
-                        <span className="text-[10px] text-[#555] truncate">{t.text.replace(/^🎵\s*/, '')}</span>
+                    {d && (
+                      <span className={`text-[12px] font-medium inline-flex w-5 h-5 items-center justify-center rounded-full mt-1.5 ml-1.5`}
+                        style={{
+                          background: isToday ? 'var(--text-1)' : 'transparent',
+                          color: isToday ? '#fff' : 'var(--text-2)',
+                        }}>
+                        {d.day}
+                      </span>
+                    )}
+
+                    {/* Task dots (small, below day number) */}
+                    {d && (tasksByDate[d.date] ?? []).length > 0 && (
+                      <div className="flex gap-0.5 flex-wrap px-1 mt-1" style={{ marginTop: barsHeight + 8 }}>
+                        {(tasksByDate[d.date] ?? []).slice(0, 2).map(t => (
+                          <span key={t.id} className="w-1 h-1 rounded-full"
+                            style={{ background: sourceDot(t.source) }} />
+                        ))}
                       </div>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <span className="text-[10px] text-[#aaa]">+{dayEvents.length - 3}</span>
                     )}
                   </div>
-                </>
-              )}
+                )
+              })}
+
+              {/* Event bars overlay */}
+              {bars.map(bar => (
+                <EventBar key={bar.event.id} bar={bar} projects={projects}
+                  onClick={() => setSelectedDate(bar.event.start_date)} />
+              ))}
             </div>
           )
         })}
       </div>
 
-      {/* Day panel */}
-      {selectedDay && selectedDateStr && (
-        <div className="mt-4 bg-white border border-[#ebebea] rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[14px] font-semibold text-[#1a1a1a]">
-              {selectedDay} de {MONTHS_PT[month]}
-            </p>
-            <button
-              onClick={() => setAddingEvent(true)}
-              className="flex items-center gap-1 px-2.5 py-1 text-[12px] bg-[#1a1a1a] text-white rounded hover:bg-[#333] transition-colors"
-            >
-              <span className="text-[14px] leading-none">+</span>
-              Evento
-            </button>
-          </div>
-
-          {selectedEvents.length === 0 && !addingEvent && (
-            <p className="text-[13px] text-[#bbb]">Nenhum evento. Clica em + Evento para adicionar.</p>
-          )}
-
-          {selectedEvents.map((t) => (
-            <div key={t.id}>
-              <div
-                className="flex items-start gap-2 py-2 border-b border-[#f5f5f3] last:border-0 group"
-                onClick={() => {
-                  if (t.source === 'calendar') {
-                    setEditingEventId(editingEventId === t.id ? null : t.id)
-                    setAddingEvent(false)
-                  }
-                }}
-                style={{ cursor: t.source === 'calendar' ? 'pointer' : 'default' }}
-              >
-                <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${sourceDot(t.source)}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-[#1a1a1a]">{t.text.replace(/^🎵\s*/, '')}</p>
-                  {parseEventTime(t) && (
-                    <p className="text-[11px] text-[#aaa]">{parseEventTime(t)}</p>
-                  )}
-                  {t.source === 'mystic_event' && (
-                    <span className="text-[10px] text-purple-400">Mystic Fyah</span>
-                  )}
-                </div>
-                {t.source === 'calendar' && (
-                  <span className="text-[11px] opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'var(--text-2)' }}>
-                    editar
-                  </span>
-                )}
-              </div>
-              {editingEventId === t.id && (
-                <EditEventForm
-                  task={t}
-                  onClose={() => setEditingEventId(null)}
-                  onSaved={fetchTasks}
-                  onDelete={fetchTasks}
-                />
-              )}
-            </div>
-          ))}
-
-          {addingEvent && (
-            <AddEventForm
-              date={selectedDateStr}
-              onClose={() => setAddingEvent(false)}
-              onSaved={fetchTasks}
-            />
-          )}
-        </div>
+      {/* Drag range form */}
+      {showRangeForm && dragMin && dragMax && (
+        <CreateEventForm
+          startDate={dragMin}
+          endDate={dragMax}
+          onClose={() => { setShowRangeForm(false); setDragStart(null); setDragEnd(null) }}
+          onSaved={() => {
+            setShowRangeForm(false); setDragStart(null); setDragEnd(null)
+            fetchEvents(monthStart, monthEnd)
+          }}
+        />
       )}
 
-      {/* Legend */}
-      <div className="mt-4 flex items-center gap-4 px-1">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#1a1a1a]" />
-          <span className="text-[11px] text-[#aaa]">Manual</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-purple-400" />
-          <span className="text-[11px] text-[#aaa]">Mystic evento</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-indigo-400" />
-          <span className="text-[11px] text-[#aaa]">Mystic tarefa</span>
-        </div>
-      </div>
+      {/* Day panel */}
+      {selectedDate && !showRangeForm && (
+        <DayPanel
+          dateStr={selectedDate}
+          year={year}
+          month={month}
+          calEvents={selectedDayEvents}
+          taskEvents={selectedTaskEvents}
+          onClose={() => setSelectedDate(null)}
+          onRefresh={() => { fetchTasks(); fetchEvents(monthStart, monthEnd) }}
+        />
+      )}
     </div>
   )
 }

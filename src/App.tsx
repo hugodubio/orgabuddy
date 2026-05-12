@@ -20,6 +20,7 @@ import TimeView from './components/TimeView'
 import FocusMode from './components/FocusMode'
 import DailyBriefing from './components/DailyBriefing'
 import WeeklyReview from './components/WeeklyReview'
+import UpcomingEvents from './components/UpcomingEvents'
 import { useReminders } from './hooks/useReminders'
 
 function ViewToggle() {
@@ -272,6 +273,7 @@ export default function App() {
               <>
                 <div className="mb-8">
                   {!activeProject && !activeTag && <DailyBriefing tasks={userTasks} />}
+                  <UpcomingEvents />
                   <CaptureBar defaultProject={activeProject ?? undefined} />
                 </div>
                 {loading ? (

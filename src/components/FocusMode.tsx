@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Task } from '../types'
 import { useTasksStore } from '../store/tasks'
+import UpcomingEvents from './UpcomingEvents'
 
 const WORK_MINS = 25
 const BREAK_MINS = 5
@@ -192,6 +193,8 @@ export default function FocusMode({ userId, onExit }: Props) {
           {running ? '⏸' : '▶'}
         </button>
       </div>
+
+      <UpcomingEvents compact />
 
       {/* Exit */}
       <button onClick={onExit}

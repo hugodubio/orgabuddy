@@ -106,3 +106,24 @@ export interface Note {
   content: string
   updated_at: string | null
 }
+
+export type RecurrenceRule = 'weekly' | 'monthly' | 'first-week-monthly'
+
+export interface CalendarEvent {
+  id: number
+  user_id: string
+  title: string
+  start_date: string  // YYYY-MM-DD
+  end_date: string    // YYYY-MM-DD
+  project_id: string | null
+  notes: string | null
+  location: string | null
+  recurrence_rule: RecurrenceRule | null
+  recurrence_end: string | null
+  parent_event_id: number | null
+  task_id: number | null
+  gcal_event_id: string | null
+  gcal_calendar_id: string | null
+  gcal_account: string | null
+  created_at: string
+}

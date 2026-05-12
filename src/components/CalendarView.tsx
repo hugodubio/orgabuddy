@@ -317,7 +317,8 @@ function DayPanel({ dateStr, year, month, calEvents, taskEvents, onClose, onRefr
   const day = parseInt(dateStr.split('-')[2])
 
   return (
-    <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <div className="rounded-t-2xl md:rounded-xl md:mt-4 p-4 max-h-[70vh] overflow-y-auto"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-[14px] font-semibold" style={{ color: 'var(--text-1)' }}>
           {day} de {MONTHS_PT[month]}
@@ -413,6 +414,8 @@ export default function CalendarView() {
   const [dragEnd, setDragEnd] = useState<string | null>(null)
   const [showRangeForm, setShowRangeForm] = useState(false)
   const isDragging = useRef(false)
+  const dragStartRef = useRef<string | null>(null)
+  const dragEndRef = useRef<string | null>(null)
 
   const { tasks, fetchTasks } = useTasksStore()
   const { projects } = useProjectsStore()
@@ -437,8 +440,34 @@ export default function CalendarView() {
       }
       isDragging.current = false
     }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return
+      e.preventDefault()
+      const touch = e.touches[0]
+      const el = document.elementFromPoint(touch.clientX, touch.clientY)
+      const date = (el?.closest('[data-date]') as HTMLElement)?.dataset?.date
+      if (date) { setDragEnd(date); dragEndRef.current = date }
+    }
+    const onTouchEnd = () => {
+      const start = dragStartRef.current
+      const end = dragEndRef.current
+      if (isDragging.current && start && end && start !== end) {
+        setShowRangeForm(true)
+      } else if (isDragging.current && start) {
+        setSelectedDate(prev => prev === start ? null : start)
+        setDragStart(null); setDragEnd(null)
+        dragStartRef.current = null; dragEndRef.current = null
+      }
+      isDragging.current = false
+    }
     document.addEventListener('mouseup', onUp)
-    return () => document.removeEventListener('mouseup', onUp)
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onTouchEnd)
+    return () => {
+      document.removeEventListener('mouseup', onUp)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
   }, [dragStart, dragEnd])
 
   const calendarTasks = tasks.filter(t =>
@@ -473,10 +502,9 @@ export default function CalendarView() {
 
   const handleDayMouseDown = (date: string) => {
     isDragging.current = true
-    setDragStart(date)
-    setDragEnd(date)
-    setShowRangeForm(false)
-    setSelectedDate(null)
+    setDragStart(date); setDragEnd(date)
+    dragStartRef.current = date; dragEndRef.current = date
+    setShowRangeForm(false); setSelectedDate(null)
   }
 
   const handleDayMouseEnter = (date: string) => {
@@ -484,9 +512,17 @@ export default function CalendarView() {
   }
 
   const handleDayClick = (date: string) => {
-    if (dragStart !== dragEnd) return // was a drag, not a click
+    if (dragStart !== dragEnd) return
     setSelectedDate(selectedDate === date ? null : date)
     setDragStart(null); setDragEnd(null)
+  }
+
+  const handleDayTouchStart = (date: string, e: React.TouchEvent) => {
+    e.preventDefault()
+    isDragging.current = true
+    setDragStart(date); setDragEnd(date)
+    dragStartRef.current = date; dragEndRef.current = date
+    setShowRangeForm(false); setSelectedDate(null)
   }
 
   const selectedDayEvents = selectedDate ? (events.filter(e => e.start_date <= selectedDate && e.end_date >= selectedDate)) : []
@@ -520,7 +556,7 @@ export default function CalendarView() {
           const bars = computeBars(week, events)
           const maxLane = bars.length ? Math.max(...bars.map(b => b.lane)) : -1
           const barsHeight = maxLane >= 0 ? (maxLane + 1) * 22 + 4 : 0
-          const rowHeight = Math.max(64, 28 + barsHeight)
+          const rowHeight = Math.max(72, 28 + barsHeight)
 
           return (
             <div key={wi} className="relative grid grid-cols-7"
@@ -534,6 +570,7 @@ export default function CalendarView() {
 
                 return (
                   <div key={di}
+                    data-date={d?.date}
                     className="h-full cursor-pointer transition-colors"
                     style={{
                       borderRight: di < 6 ? '1px solid var(--border)' : 'none',
@@ -542,6 +579,7 @@ export default function CalendarView() {
                     onMouseDown={() => d && handleDayMouseDown(d.date)}
                     onMouseEnter={() => d && handleDayMouseEnter(d.date)}
                     onMouseUp={() => d && handleDayClick(d.date)}
+                    onTouchStart={d ? (e) => handleDayTouchStart(d.date, e) : undefined}
                   >
                     {d && (
                       <span className={`text-[12px] font-medium inline-flex w-5 h-5 items-center justify-center rounded-full mt-1.5 ml-1.5`}
@@ -589,17 +627,24 @@ export default function CalendarView() {
         />
       )}
 
-      {/* Day panel */}
+      {/* Day panel — bottom sheet no mobile, inline no desktop */}
       {selectedDate && !showRangeForm && (
-        <DayPanel
-          dateStr={selectedDate}
-          year={year}
-          month={month}
-          calEvents={selectedDayEvents}
-          taskEvents={selectedTaskEvents}
-          onClose={() => setSelectedDate(null)}
-          onRefresh={() => { fetchTasks(); fetchEvents(monthStart, monthEnd) }}
-        />
+        <>
+          {/* Backdrop mobile */}
+          <div className="fixed inset-0 z-40 md:hidden bg-black/20"
+            onClick={() => setSelectedDate(null)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:relative md:bottom-auto md:z-auto md:mt-4">
+            <DayPanel
+              dateStr={selectedDate}
+              year={year}
+              month={month}
+              calEvents={selectedDayEvents}
+              taskEvents={selectedTaskEvents}
+              onClose={() => setSelectedDate(null)}
+              onRefresh={() => { fetchTasks(); fetchEvents(monthStart, monthEnd) }}
+            />
+          </div>
+        </>
       )}
     </div>
   )

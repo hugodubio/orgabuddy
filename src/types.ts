@@ -2,7 +2,7 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin' | 'time' | 'tracks'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin' | 'time' | 'tracks' | 'today' | 'inbox' | 'habits'
 
 export type TrackStatus = 'ideia' | 'produção' | 'mix' | 'master' | 'lançado'
 
@@ -62,6 +62,8 @@ export interface Task {
   tags: string[]
   note: string | null
   due_date: string | null
+  scheduled_date: string | null
+  track_id: number | null
   created_at: string
   updated_at: string
 }

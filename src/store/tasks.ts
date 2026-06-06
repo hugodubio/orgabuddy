@@ -30,9 +30,11 @@ interface TasksState {
   updateLinks: (id: number, links: number[]) => Promise<void>
   updateExternalLinks: (id: number, links: string[]) => Promise<void>
   updateTags: (id: number, tags: string[]) => Promise<void>
-  updateTaskField: (id: number, fields: Partial<Pick<Task, 'text' | 'priority' | 'note' | 'type' | 'due_date'>>) => Promise<void>
+  updateTaskField: (id: number, fields: Partial<Pick<Task, 'text' | 'priority' | 'note' | 'type' | 'due_date' | 'scheduled_date' | 'track_id'>>) => Promise<void>
   updateProjects: (id: number, projects: string[]) => Promise<void>
   updateAttachments: (id: number, attachments: import('../types').Attachment[]) => Promise<void>
+  scheduleToday: (id: number) => Promise<void>
+  unscheduleToday: (id: number) => Promise<void>
   syncFromMystic: () => Promise<{ added: number; updated: number }>
 }
 
@@ -151,6 +153,17 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       .from('ob_tasks')
       .update({ ...fields, updated_at: new Date().toISOString() })
       .eq('id', id)
+  },
+
+  scheduleToday: async (id) => {
+    const today = new Date().toISOString().split('T')[0]
+    set((s) => ({ tasks: s.tasks.map((t) => t.id === id ? { ...t, scheduled_date: today } : t) }))
+    await supabase.from('ob_tasks').update({ scheduled_date: today, updated_at: new Date().toISOString() }).eq('id', id)
+  },
+
+  unscheduleToday: async (id) => {
+    set((s) => ({ tasks: s.tasks.map((t) => t.id === id ? { ...t, scheduled_date: null } : t) }))
+    await supabase.from('ob_tasks').update({ scheduled_date: null, updated_at: new Date().toISOString() }).eq('id', id)
   },
 
   syncFromMystic: async () => {

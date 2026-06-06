@@ -181,7 +181,39 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
       )}
 
       <nav className="flex-1 px-2 pt-3 overflow-y-auto space-y-0.5">
-        {/* Foco */}
+        {/* Hoje */}
+        <button
+          onClick={() => { setActiveProject(null); setView('today' as import('../types').View) }}
+          className={navBtn(view === 'today')}
+        >
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
+            <rect x="1" y="2.5" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" strokeWidth="1"/>
+            <line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <circle cx="4.5" cy="9.5" r="1" fill="currentColor"/>
+          </svg>
+          <span>Hoje</span>
+        </button>
+
+        {/* Inbox */}
+        <button
+          onClick={() => { setActiveProject(null); setView('inbox' as import('../types').View) }}
+          className={navBtn(view === 'inbox')}
+        >
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
+            <path d="M1 9l2-6h8l2 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <rect x="1" y="9" width="12" height="4" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+            <line x1="5" y1="11" x2="9" y2="11" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+          </svg>
+          <span>Inbox</span>
+          {(() => {
+            const n = tasks.filter((t) => !t.done && t.projects.length === 0 && t.source !== 'mystic_event').length
+            return n > 0 ? <span className="ml-auto text-[11px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#fef2f2', color: '#ef4444' }}>{n}</span> : null
+          })()}
+        </button>
+
+        {/* Tarefas */}
         <button
           onClick={() => { setActiveProject(null); setView('focus') }}
           className={navBtn(view === 'focus' && !activeProject && !activeTag)}
@@ -190,7 +222,7 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
             <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
             <circle cx="7" cy="7" r="2" fill="currentColor"/>
           </svg>
-          <span>Foco</span>
+          <span>Tarefas</span>
           {totalPending > 0 && <span className="ml-auto text-[11px]" style={{ color: '#5a5248' }}>{totalPending}</span>}
         </button>
 
@@ -231,6 +263,17 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
             <line x1="5.8" y1="3" x2="11.8" y2="2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
           </svg>
           <span>Músicas</span>
+        </button>
+
+        <button
+          onClick={() => { setActiveProject(null); setView('habits' as import('../types').View) }}
+          className={navBtn(view === 'habits')}
+        >
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
+            <path d="M7 1.5a5.5 5.5 0 100 11A5.5 5.5 0 007 1.5z" stroke="currentColor" strokeWidth="1.2"/>
+            <path d="M7 4v3.2l1.8 1.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
+          <span>Hábitos</span>
         </button>
 
         <button

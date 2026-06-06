@@ -22,6 +22,9 @@ import DailyBriefing from './components/DailyBriefing'
 import WeeklyReview from './components/WeeklyReview'
 import UpcomingEvents from './components/UpcomingEvents'
 import TracksView from './components/TracksView'
+import TodayView from './components/TodayView'
+import InboxView from './components/InboxView'
+import HabitsView from './components/HabitsView'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useReminders } from './hooks/useReminders'
 
@@ -75,18 +78,19 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
   const { view, setView, setActiveProject } = useTasksStore()
 
   const items = [
-    { v: 'focus' as const, label: 'Foco', active: view === 'focus', icon: (
-      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
-        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
-        <circle cx="7" cy="7" r="2" fill="currentColor"/>
-      </svg>
-    )},
-    { v: 'calendar' as const, label: 'Calendário', active: view === 'calendar', icon: (
+    { v: 'today' as const, label: 'Hoje', active: view === 'today', icon: (
       <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
         <rect x="1" y="2.5" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
         <line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" strokeWidth="1"/>
         <line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
         <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="4.5" cy="9.5" r="1" fill="currentColor"/>
+      </svg>
+    )},
+    { v: 'focus' as const, label: 'Tarefas', active: view === 'focus', icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
+        <circle cx="7" cy="7" r="2" fill="currentColor"/>
       </svg>
     )},
     { v: 'tracks' as const, label: 'Músicas', active: view === 'tracks', icon: (
@@ -98,12 +102,10 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
         <line x1="6" y1="3" x2="12" y2="2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
       </svg>
     )},
-    { v: 'notes' as const, label: 'Notas', active: view === 'notes', icon: (
+    { v: 'habits' as const, label: 'Hábitos', active: view === 'habits', icon: (
       <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
-        <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
-        <line x1="4" y1="5" x2="10" y2="5" stroke="currentColor" strokeWidth="1"/>
-        <line x1="4" y1="7.5" x2="10" y2="7.5" stroke="currentColor" strokeWidth="1"/>
-        <line x1="4" y1="10" x2="7" y2="10" stroke="currentColor" strokeWidth="1"/>
+        <path d="M7 2a5 5 0 100 10A5 5 0 007 2z" stroke="currentColor" strokeWidth="1.3"/>
+        <path d="M7 4.5v2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
       </svg>
     )},
   ]
@@ -233,7 +235,10 @@ export default function App() {
     ? `#${activeTag}`
     : activeProject
     ? activeProject.charAt(0).toUpperCase() + activeProject.slice(1)
-    : 'Foco'
+    : 'Tarefas'
+
+  const doneTodayCount = userTasks.filter((t) => t.done && t.updated_at.startsWith(today)).length
+  const inboxCount = userTasks.filter((t) => !t.done && t.projects.length === 0 && t.source !== 'mystic_event').length
 
   return (
     <div className="flex min-h-screen">
@@ -263,8 +268,27 @@ export default function App() {
         {view === 'focus' && (
           <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-              <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-[21px] md:text-[24px]" style={{ color: 'var(--text-1)', fontFamily: 'Inter, sans-serif', fontWeight: 800, letterSpacing: '-0.04em' }}>{title}</h1>
+                {/* Focus score */}
+                {!activeProject && !activeTag && (doneTodayCount > 0 || inboxCount > 0) && (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {doneTodayCount > 0 && (
+                      <span className="text-[11px] font-medium" style={{ color: 'var(--brand-secondary)' }}>
+                        ✓ {doneTodayCount} feita{doneTodayCount > 1 ? 's' : ''} hoje
+                      </span>
+                    )}
+                    {inboxCount > 0 && (
+                      <button onClick={() => { const { setView } = useTasksStore.getState(); setView('inbox') }}
+                        className="text-[11px] font-medium"
+                        style={{ color: '#f59e0b' }}>
+                        {inboxCount} no inbox
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setFocusMode(true)}
@@ -356,7 +380,40 @@ export default function App() {
             <TracksView />
           </div>
         )}
+
+        {view === 'today' && (
+          <div className="flex-1 flex flex-col">
+            <TodayView />
+          </div>
+        )}
+
+        {view === 'inbox' && (
+          <div className="flex-1 flex flex-col">
+            <InboxView />
+          </div>
+        )}
+
+        {view === 'habits' && (
+          <div className="flex-1 flex flex-col">
+            <HabitsView />
+          </div>
+        )}
       </main>
+
+      {/* FAB — quick capture mobile */}
+      {userId && !['notes', 'graph', 'time'].includes(view) && (
+        <button
+          onClick={() => setPaletteOpen(true)}
+          className="fixed bottom-20 right-4 md:hidden z-20 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95"
+          style={{ background: 'var(--amber)', color: '#fff', boxShadow: '0 4px 16px rgba(26,188,156,0.4)' }}
+          aria-label="Captura rápida"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
+        </button>
+      )}
 
       {/* Bottom nav — mobile only */}
       <BottomNav onMenuOpen={() => setSidebarOpen(true)} />

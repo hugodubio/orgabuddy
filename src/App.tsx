@@ -21,6 +21,7 @@ import FocusMode from './components/FocusMode'
 import DailyBriefing from './components/DailyBriefing'
 import WeeklyReview from './components/WeeklyReview'
 import UpcomingEvents from './components/UpcomingEvents'
+import TracksView from './components/TracksView'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useReminders } from './hooks/useReminders'
 
@@ -88,18 +89,21 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
         <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
       </svg>
     )},
+    { v: 'tracks' as const, label: 'Músicas', active: view === 'tracks', icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
+        <circle cx="4" cy="11" r="2" stroke="currentColor" strokeWidth="1.3"/>
+        <circle cx="10" cy="9" r="2" stroke="currentColor" strokeWidth="1.3"/>
+        <line x1="6" y1="11" x2="6" y2="3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="12" y1="9" x2="12" y2="2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="6" y1="3" x2="12" y2="2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    )},
     { v: 'notes' as const, label: 'Notas', active: view === 'notes', icon: (
       <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
         <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
         <line x1="4" y1="5" x2="10" y2="5" stroke="currentColor" strokeWidth="1"/>
         <line x1="4" y1="7.5" x2="10" y2="7.5" stroke="currentColor" strokeWidth="1"/>
         <line x1="4" y1="10" x2="7" y2="10" stroke="currentColor" strokeWidth="1"/>
-      </svg>
-    )},
-    { v: 'note' as const, label: 'Diário', active: view === 'note', icon: (
-      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
-        <path d="M3 2h6l3 3v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.3"/>
-        <path d="M9 2v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
       </svg>
     )},
   ]
@@ -344,6 +348,12 @@ export default function App() {
         {view === 'time' && (
           <div className="flex-1 flex flex-col px-4 py-6">
             <TimeView />
+          </div>
+        )}
+
+        {view === 'tracks' && (
+          <div className="flex-1 flex flex-col">
+            <TracksView />
           </div>
         )}
       </main>

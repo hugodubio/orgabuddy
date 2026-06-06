@@ -2,7 +2,36 @@ export type Project = string
 export type Priority = 'alta' | 'média' | 'baixa'
 export type TaskType = 'tarefa' | 'ideia'
 export type TaskSource = 'manual' | 'gmail' | 'mystic_event' | 'mystic_task' | 'calendar'
-export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin' | 'time'
+export type View = 'focus' | 'graph' | 'note' | 'calendar' | 'notes' | 'search' | 'admin' | 'time' | 'tracks'
+
+export type TrackStatus = 'ideia' | 'produção' | 'mix' | 'master' | 'lançado'
+
+export interface Track {
+  id: number
+  user_id: string
+  title: string
+  artist: string | null
+  project: string | null
+  status: TrackStatus
+  deadline: string | null
+  bpm: number | null
+  key: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Release {
+  id: number
+  user_id: string
+  name: string
+  type: 'single' | 'ep' | 'álbum'
+  release_date: string | null
+  track_ids: number[]
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
 
 export interface TimeEntry {
   id: number

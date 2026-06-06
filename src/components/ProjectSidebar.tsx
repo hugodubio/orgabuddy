@@ -220,6 +220,20 @@ export default function ProjectSidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
         <button
+          onClick={() => { setActiveProject(null); setView('tracks' as import('../types').View) }}
+          className={navBtn(view === 'tracks')}
+        >
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 14 14">
+            <circle cx="4" cy="11" r="1.8" stroke="currentColor" strokeWidth="1.2"/>
+            <circle cx="10" cy="9" r="1.8" stroke="currentColor" strokeWidth="1.2"/>
+            <line x1="5.8" y1="11" x2="5.8" y2="3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <line x1="11.8" y1="9" x2="11.8" y2="2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <line x1="5.8" y1="3" x2="11.8" y2="2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          <span>Músicas</span>
+        </button>
+
+        <button
           onClick={() => { setActiveProject(null); setView('notes') }}
           className={navBtn(view === 'notes')}
         >

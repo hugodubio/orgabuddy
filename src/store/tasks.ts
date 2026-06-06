@@ -44,7 +44,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   activeTag: null,
   onlyUrgent: false,
   view: 'focus',
-  displayMode: 'kanban',
+  displayMode: 'list',
 
   setActiveProject: (p) => set({ activeProject: p, activeTag: null, view: 'focus' }),
   setActiveTag: (tag) => set({ activeTag: tag, activeProject: null, onlyUrgent: false, view: 'focus' }),

@@ -109,7 +109,7 @@ export default function TaskCard({ task, onDragStart }: Props) {
             }
           }}
           aria-label={task.done ? 'Marcar como pendente' : 'Marcar como feita'}
-          className="mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center transition-colors"
+          className="mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center transition-colors -m-1.5 p-1.5"
           style={{ border: '1px solid var(--border)' }}
         >
           {task.done && (

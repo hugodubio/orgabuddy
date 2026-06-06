@@ -245,7 +245,7 @@ export default function CaptureBar({ defaultProject }: { defaultProject?: string
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           {linkResults.map((t) => (
             <button key={t.id} onMouseDown={() => insertLink(t)}
-              className="w-full text-left px-4 py-2.5 text-[13px] transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] transition-colors"
               style={{ color: 'var(--text-1)', borderBottom: '1px solid var(--border-soft)' }}
               onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
@@ -255,7 +255,7 @@ export default function CaptureBar({ defaultProject }: { defaultProject?: string
         </div>
       )}
 
-      <p className="mt-2 text-[11px] px-1" style={{ color: 'var(--text-3)' }}>
+      <p className="hidden md:block mt-2 text-[11px] px-1" style={{ color: 'var(--text-3)' }}>
         Atalhos:{' '}
         <code className="rounded px-1" style={{ background: 'var(--border-soft)', color: 'var(--text-2)' }}>@projeto</code>{' '}
         <code className="rounded px-1" style={{ background: 'var(--border-soft)', color: 'var(--text-2)' }}>#prioridade</code>{' '}

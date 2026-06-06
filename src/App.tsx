@@ -21,6 +21,7 @@ import FocusMode from './components/FocusMode'
 import DailyBriefing from './components/DailyBriefing'
 import WeeklyReview from './components/WeeklyReview'
 import UpcomingEvents from './components/UpcomingEvents'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useReminders } from './hooks/useReminders'
 
 function ViewToggle() {
@@ -79,6 +80,14 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
         <circle cx="7" cy="7" r="2" fill="currentColor"/>
       </svg>
     )},
+    { v: 'calendar' as const, label: 'Calendário', active: view === 'calendar', icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
+        <rect x="1" y="2.5" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+        <line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" strokeWidth="1"/>
+        <line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    )},
     { v: 'notes' as const, label: 'Notas', active: view === 'notes', icon: (
       <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
         <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
@@ -102,7 +111,7 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
         <button
           key={v}
           onClick={() => { setActiveProject(null); setView(v) }}
-          className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors"
+          className="flex-1 flex flex-col items-center gap-1 py-2.5 text-[9px] font-medium transition-colors"
           style={{ color: active ? 'var(--amber)' : 'var(--sidebar-text)' }}
         >
           {icon}
@@ -112,7 +121,7 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
       {/* Menu */}
       <button
         onClick={onMenuOpen}
-        className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors"
+        className="flex-1 flex flex-col items-center gap-1 py-2.5 text-[9px] font-medium transition-colors"
         style={{ color: 'var(--sidebar-text)' }}
       >
         <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 14 14">
@@ -120,7 +129,7 @@ function BottomNav({ onMenuOpen }: { onMenuOpen: () => void }) {
           <line x1="1" y1="7" x2="10" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
           <line x1="1" y1="10.5" x2="7" y2="10.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
         </svg>
-        Menu
+        Mais
       </button>
     </nav>
   )
@@ -243,9 +252,9 @@ export default function App() {
 
       <main className={`flex-1 flex flex-col ${
         view === 'focus' && displayMode === 'kanban'
-          ? 'px-4 md:px-6 py-6 md:py-8 overflow-x-auto'
-          : 'px-4 md:px-8 py-6 md:py-10'
-      } pb-20 md:pb-6`}>
+          ? 'px-3 md:px-6 py-4 md:py-8'
+          : 'px-3 md:px-8 py-4 md:py-10'
+      } pb-24 md:pb-6`}>
 
         {view === 'focus' && (
           <div className={displayMode === 'kanban' ? 'w-full' : 'max-w-2xl mx-auto w-full'}>

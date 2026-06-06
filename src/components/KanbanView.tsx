@@ -130,7 +130,7 @@ export default function KanbanView({ tasks }: Props) {
   }
 
   return (
-    <div className="flex gap-4 h-full overflow-x-auto pb-4">
+    <div className="flex flex-col md:flex-row gap-4 md:h-full md:overflow-x-auto pb-4">
       {COLUMNS.map(({ key, label, color, bg }) => {
         const col = tasks.filter((t) => t.priority === key)
         const isOver = dragOver === key
@@ -138,7 +138,7 @@ export default function KanbanView({ tasks }: Props) {
         return (
           <div
             key={key}
-            className="flex flex-col w-72 shrink-0"
+            className="flex flex-col md:w-72 md:shrink-0"
             onDragOver={(e) => { e.preventDefault(); setDragOver(key) }}
             onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null) }}
             onDrop={() => handleDrop(key)}

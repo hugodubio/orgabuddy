@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useTracksStore } from '../store/tracks'
 import { useProjectsStore } from '../store/projects'
+import { useTasksStore } from '../store/tasks'
+import { useAuthStore } from '../store/auth'
+import { supabase } from '../lib/supabase'
 import type { Track, Release, TrackStatus } from '../types'
 
 const PIPELINE: { key: TrackStatus; label: string; color: string; bg: string }[] = [
@@ -27,6 +30,81 @@ function DeadlineBadge({ date }: { date: string }) {
       style={{ background: color + '18', color }}>
       {label}
     </span>
+  )
+}
+
+// ── Track Tasks ───────────────────────────────────────────────────────────────
+
+function TrackTasks({ trackId, project }: { trackId: number; project: string }) {
+  const { tasks, toggleDone, fetchTasks } = useTasksStore()
+  const { userId } = useAuthStore()
+  const [newText, setNewText] = useState('')
+  const [adding, setAdding] = useState(false)
+
+  const linked = tasks.filter((t) => (t as any).track_id === trackId)
+
+  const handleAdd = async () => {
+    const text = newText.trim()
+    if (!text) return
+    setAdding(true)
+    await supabase.from('ob_tasks').insert({
+      text,
+      projects: project ? [project] : [],
+      priority: 'média',
+      type: 'tarefa',
+      done: false,
+      track_id: trackId,
+      user_id: userId ?? 'hugo',
+      tags: [],
+      links: [],
+    })
+    await fetchTasks()
+    setNewText('')
+    setAdding(false)
+  }
+
+  return (
+    <div>
+      <p className="text-[11px] font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>
+        Tarefas ({linked.length})
+      </p>
+      <div className="flex flex-col gap-1.5 mb-2">
+        {linked.map((t) => (
+          <div key={t.id} className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            <button
+              onClick={() => toggleDone(t.id)}
+              className="w-4 h-4 rounded flex items-center justify-center shrink-0 transition-colors"
+              style={{ border: t.done ? 'none' : '1.5px solid var(--border)', background: t.done ? 'var(--brand-secondary)' : 'transparent' }}
+            >
+              {t.done && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M2 5l2 2L8 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+            </button>
+            <span className={`text-[13px] flex-1 ${t.done ? 'line-through' : ''}`}
+              style={{ color: t.done ? 'var(--text-3)' : 'var(--text-1)' }}>
+              {t.text}
+            </span>
+          </div>
+        ))}
+        {linked.length === 0 && (
+          <p className="text-[12px] px-1" style={{ color: 'var(--text-3)' }}>Sem tarefas ligadas ainda.</p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={newText}
+          onChange={(e) => setNewText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleAdd() }}
+          placeholder="Nova tarefa para esta música…"
+          className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+        />
+        <button onClick={handleAdd} disabled={!newText.trim() || adding}
+          className="px-3 py-2 rounded-xl text-[12px] font-semibold disabled:opacity-40"
+          style={{ background: 'var(--brand-primary)', color: '#fff' }}>
+          {adding ? '…' : '+'}
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -186,11 +264,14 @@ function TrackForm({ initial, onSave, onDelete, onClose }: TrackFormProps) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Referências, ideias, links, contexto…"
-              rows={4}
+              rows={3}
               className="w-full px-3 py-2.5 rounded-xl text-[14px] resize-none outline-none leading-relaxed"
               style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
             />
           </div>
+
+          {/* Tarefas ligadas — só em edição */}
+          {initial?.id && <TrackTasks trackId={initial.id} project={project} />}
         </div>
 
         {/* Actions */}

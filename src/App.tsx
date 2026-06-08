@@ -22,11 +22,13 @@ import DailyBriefing from './components/DailyBriefing'
 import WeeklyReview from './components/WeeklyReview'
 import UpcomingEvents from './components/UpcomingEvents'
 import TracksView from './components/TracksView'
+import ProjectHub from './components/ProjectHub'
 import TodayView from './components/TodayView'
 import InboxView from './components/InboxView'
 import HabitsView from './components/HabitsView'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useReminders } from './hooks/useReminders'
+import { flushQueue, getQueue } from './lib/offlineQueue'
 
 function ViewToggle() {
   const { displayMode, setDisplayMode } = useTasksStore()
@@ -149,9 +151,29 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const [weeklyReview, setWeeklyReview] = useState(false)
+  const [offline, setOffline] = useState(!navigator.onLine)
+  const [syncing, setSyncing] = useState(false)
   const captureRef = useRef<HTMLInputElement | null>(null)
 
   useReminders(tasks, userId)
+
+  // Offline detection + auto-sync on reconnect
+  useEffect(() => {
+    const onOnline = async () => {
+      setOffline(false)
+      const queue = getQueue()
+      if (queue.length > 0) {
+        setSyncing(true)
+        await flushQueue()
+        await fetchTasks()
+        setSyncing(false)
+      }
+    }
+    const onOffline = () => setOffline(true)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline) }
+  }, [fetchTasks])
 
   useEffect(() => { fetchTasks(); fetchProjects() }, [fetchTasks, fetchProjects])
 
@@ -307,19 +329,22 @@ export default function App() {
             </div>
 
             {displayMode === 'list' && (
-              <>
-                <div className="mb-8">
-                  {!activeProject && !activeTag && <DailyBriefing tasks={userTasks} />}
-                  <UpcomingEvents />
-                  <CaptureBar defaultProject={activeProject ?? undefined} />
-                </div>
-                {loading ? (
-                  <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
-                ) : (
-                  <TaskList tasks={visible} />
-                )}
-                {activeProject && <ProjectNote projectId={activeProject} />}
-              </>
+              activeProject ? (
+                <ProjectHub projectId={activeProject} />
+              ) : (
+                <>
+                  <div className="mb-8">
+                    {!activeTag && <DailyBriefing tasks={userTasks} />}
+                    <UpcomingEvents />
+                    <CaptureBar />
+                  </div>
+                  {loading ? (
+                    <div className="text-[13px] text-center py-12" style={{ color: 'var(--text-3)' }}>a carregar…</div>
+                  ) : (
+                    <TaskList tasks={visible} />
+                  )}
+                </>
+              )
             )}
 
             {displayMode === 'kanban' && <KanbanView tasks={visible} />}
@@ -399,6 +424,14 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Offline banner */}
+      {(offline || syncing) && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-2 text-[12px] font-semibold"
+          style={{ background: syncing ? 'var(--brand-secondary)' : '#f59e0b', color: '#fff' }}>
+          {syncing ? '↑ a sincronizar…' : '● sem ligação — as alterações serão guardadas quando voltar a ligar'}
+        </div>
+      )}
 
       {/* FAB — quick capture mobile */}
       {userId && !['notes', 'graph', 'time'].includes(view) && (

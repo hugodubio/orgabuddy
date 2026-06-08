@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import type { Task, Project, View } from '../types'
 import { useAuthStore } from './auth'
+import { isOnline, enqueue, getCachedTasks, cacheTasksLocally } from '../lib/offlineQueue'
 
 const getUserId = () => useAuthStore.getState().userId ?? 'hugo'
 
@@ -56,6 +57,14 @@ export const useTasksStore = create<TasksState>((set, get) => ({
 
   fetchTasks: async () => {
     set({ loading: true })
+
+    // offline — use cache
+    if (!isOnline()) {
+      const cached = getCachedTasks() as Task[]
+      set({ tasks: cached, loading: false })
+      return
+    }
+
     const userId = getUserId()
     const cutoff = new Date(Date.now() - 7 * 86400000).toISOString()
     const { data } = await supabase
@@ -67,6 +76,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     const sorted = (data ?? []).sort(
       (a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2)
     )
+    cacheTasksLocally(sorted)
     set({ tasks: sorted as Task[], loading: false })
   },
 
@@ -79,18 +89,18 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   toggleDone: async (id) => {
     const task = get().tasks.find((t) => t.id === id)
     if (!task) return
+    const newDone = !task.done
+    const now = new Date().toISOString()
     set((s) => ({
-      tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+      tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: newDone, updated_at: now } : t)),
     }))
-    const { error } = await supabase
-      .from('ob_tasks')
-      .update({ done: !task.done, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    if (error) {
-      set((s) => ({
-        tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: task.done } : t)),
-      }))
+    cacheTasksLocally(get().tasks)
+    if (!isOnline()) {
+      enqueue({ table: 'ob_tasks', op: 'update', payload: { done: newDone, updated_at: now }, match: { id } })
+      return
     }
+    const { error } = await supabase.from('ob_tasks').update({ done: newDone, updated_at: now }).eq('id', id)
+    if (error) set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: task.done } : t)) }))
   },
 
   deleteTask: async (id) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/auth'
 import { supabase } from '../lib/supabase'
+import NotificationSettings from './NotificationSettings'
 
 interface OrgaUser {
   id: string
@@ -103,6 +104,10 @@ export default function AdminPanel() {
         {error && <p className="text-[12px]" style={{ color: '#e05a2b' }}>{error}</p>}
         {success && <p className="text-[12px]" style={{ color: '#16a34a' }}>Utilizador criado!</p>}
       </form>
+
+      <div className="mt-8">
+        <NotificationSettings />
+      </div>
     </div>
   )
 }

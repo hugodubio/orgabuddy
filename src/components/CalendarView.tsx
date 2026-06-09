@@ -92,7 +92,13 @@ function computeBars(
 
 // ─── EventBar ───────────────────────────────────────────────────────────────
 
-function EventBar({ bar, projects, onClick }: { bar: BarLayout; projects: { id: string; label: string; color_bg: string; color_text: string }[]; onClick: () => void }) {
+function EventBar({ bar, projects, onClick, onEventDragStart, onEventDragEnd }: {
+  bar: BarLayout
+  projects: { id: string; label: string; color_bg: string; color_text: string }[]
+  onClick: () => void
+  onEventDragStart: (eventId: number, startDate: string) => void
+  onEventDragEnd: () => void
+}) {
   const proj = projects.find((p: { id: string }) => p.id === bar.event.project_id)
   const left = `calc(${(bar.startCol / 7) * 100}% + 2px)`
   const width = `calc(${(bar.colSpan / 7) * 100}% - 4px)`
@@ -100,11 +106,20 @@ function EventBar({ bar, projects, onClick }: { bar: BarLayout; projects: { id: 
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.stopPropagation()
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', String(bar.event.id))
+        onEventDragStart(bar.event.id, bar.event.start_date)
+      }}
+      onDragEnd={(e) => { e.stopPropagation(); onEventDragEnd() }}
       onClick={(e) => { e.stopPropagation(); onClick() }}
-      className="absolute flex items-center px-1.5 text-[10px] font-medium truncate cursor-pointer transition-opacity hover:opacity-80 z-10 pointer-events-auto"
+      className="absolute flex items-center px-1.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 z-10 pointer-events-auto"
       style={{
         left, width, top,
         height: 18,
+        cursor: 'grab',
         background: proj?.color_bg ?? 'var(--amber)',
         color: proj?.color_text ?? '#fff',
         borderRadius: bar.isStart && bar.isEnd ? 4 : bar.isStart ? '4px 0 0 4px' : bar.isEnd ? '0 4px 4px 0' : 0,
@@ -417,9 +432,12 @@ export default function CalendarView() {
   const dragStartRef = useRef<string | null>(null)
   const dragEndRef = useRef<string | null>(null)
 
+  const [draggingEvent, setDraggingEvent] = useState<{ id: number; startDate: string } | null>(null)
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null)
+
   const { tasks, fetchTasks } = useTasksStore()
   const { projects } = useProjectsStore()
-  const { events, fetchEvents } = useEventsStore()
+  const { events, fetchEvents, updateEvent } = useEventsStore()
 
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
 
@@ -500,6 +518,25 @@ export default function CalendarView() {
     else setMonth(m => m + 1)
   }
 
+  const handleEventDrop = async (targetDate: string) => {
+    if (!draggingEvent) return
+    const event = events.find(e => e.id === draggingEvent.id)
+    if (!event) return
+    const [sy, sm, sd] = draggingEvent.startDate.split('-').map(Number)
+    const [ty, tm, td] = targetDate.split('-').map(Number)
+    const deltaDays = Math.round(
+      (Date.UTC(ty, tm - 1, td) - Date.UTC(sy, sm - 1, sd)) / 86400000
+    )
+    if (deltaDays === 0) { setDraggingEvent(null); setDragOverDate(null); return }
+    const shiftDate = (s: string) => {
+      const [y, m, d] = s.split('-').map(Number)
+      const shifted = new Date(Date.UTC(y, m - 1, d + deltaDays))
+      return shifted.toISOString().split('T')[0]
+    }
+    setDraggingEvent(null); setDragOverDate(null)
+    await updateEvent(event.id, { start_date: shiftDate(event.start_date), end_date: shiftDate(event.end_date) })
+  }
+
   const handleDayMouseDown = (date: string) => {
     isDragging.current = true
     setDragStart(date); setDragEnd(date)
@@ -568,18 +605,23 @@ export default function CalendarView() {
                 const isSelected = d?.date === selectedDate
                 const inDrag = d?.date ? isInDrag(d.date) : false
 
+                const isDropTarget = d?.date === dragOverDate
+
                 return (
                   <div key={di}
                     data-date={d?.date}
                     className="h-full cursor-pointer transition-colors"
                     style={{
                       borderRight: di < 6 ? '1px solid var(--border)' : 'none',
-                      background: isSelected ? '#fef3e2' : inDrag ? '#fff7ed' : d ? 'var(--surface)' : '#f9f8f6',
+                      background: isDropTarget ? '#fde68a' : isSelected ? '#fef3e2' : inDrag ? '#fff7ed' : d ? 'var(--surface)' : '#f9f8f6',
                     }}
-                    onMouseDown={() => d && handleDayMouseDown(d.date)}
+                    onMouseDown={() => d && !draggingEvent && handleDayMouseDown(d.date)}
                     onMouseEnter={() => d && handleDayMouseEnter(d.date)}
                     onMouseUp={() => d && handleDayClick(d.date)}
                     onTouchStart={d ? (e) => handleDayTouchStart(d.date, e) : undefined}
+                    onDragOver={d && draggingEvent ? (e) => { e.preventDefault(); setDragOverDate(d.date) } : undefined}
+                    onDragLeave={d && draggingEvent ? () => setDragOverDate(prev => prev === d.date ? null : prev) : undefined}
+                    onDrop={d && draggingEvent ? (e) => { e.preventDefault(); handleEventDrop(d.date) } : undefined}
                   >
                     {d && (
                       <span className={`text-[12px] font-medium inline-flex w-5 h-5 items-center justify-center rounded-full mt-1.5 ml-1.5`}
@@ -607,7 +649,10 @@ export default function CalendarView() {
               {/* Event bars overlay */}
               {bars.map(bar => (
                 <EventBar key={bar.event.id} bar={bar} projects={projects}
-                  onClick={() => setSelectedDate(bar.event.start_date)} />
+                  onClick={() => setSelectedDate(bar.event.start_date)}
+                  onEventDragStart={(id, startDate) => setDraggingEvent({ id, startDate })}
+                  onEventDragEnd={() => { setDraggingEvent(null); setDragOverDate(null) }}
+                />
               ))}
             </div>
           )
